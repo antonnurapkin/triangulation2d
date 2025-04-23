@@ -1,5 +1,6 @@
 #include <algorithm>
-#include <preparing.h>
+#include "preparing.h"
+#include "sturctures.h"
 
 std::unordered_map<std::string, double> preparing::get_bounds(const std::vector<std::array<double, 2>>& points) {
     std::unordered_map<std::string, double> bounds = {
@@ -39,4 +40,9 @@ std::vector<Point> preparing::normalize_coords(const std::vector<std::array<doub
     }
 
     return result;
+}
+
+
+Triangle preparing::create_super_triangle(std::vector<Point>) {
+    
 }

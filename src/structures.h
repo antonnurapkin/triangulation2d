@@ -1,4 +1,6 @@
+#pragma once
 #include <vector>
+#include <memory>
 
 class Point final {
 friend 
@@ -8,6 +10,6 @@ private:
 }
 
 class Triangle final {
-    std::array<double, 3> indexes; 
-    std::vector<Triangle> adjacentTriangles;
+    std::array<size_t, 3> indexes; 
+    std::vector<std::shared_ptr<Triangle>> adjacentTriangles;
 }

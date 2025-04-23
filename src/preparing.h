@@ -1,3 +1,4 @@
+#pragma once
 #include <unordered_map>
 #include <string>
 #include "structures.h"
@@ -9,5 +10,5 @@ namespace preparing {
 
     std::vector<Point> normalize_coords(std::vector<<std::array<double, 2>>>& points);
 
-
+    Triangle create_super_triangle(std::vector<Point>);
 } // namespace preparing
