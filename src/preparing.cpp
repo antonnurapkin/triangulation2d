@@ -1,6 +1,7 @@
 #include <algorithm>
+#include <cmath>
 #include "preparing.h"
-#include "sturctures.h"
+#include "structures.h"
 
 std::unordered_map<std::string, double> preparing::get_bounds(const std::vector<std::array<double, 2>>& points) {
     std::unordered_map<std::string, double> bounds = {
@@ -43,6 +44,33 @@ std::vector<Point> preparing::normalize_coords(const std::vector<std::array<doub
 }
 
 
-Triangle preparing::create_super_triangle(std::vector<Point>) {
-    
+Triangle preparing::create_super_triangle(std::vector<Point>& points) {
+    // Добавление вершин супер-треугольника
+    points.emplace_back(0, 100);
+    points.emplace_back(100, -100);
+    points.emplace_back(-100, -100);
+
+    int size = points.size();
+
+    return Triangle(std::array<int, 3> {size - 1, size - 2, size - 3});
+}
+
+std::vector<int> preparing::bin_sort(std::vector<Point>& points, const std::unordered_map<std::string, double>& bounds) {
+    std::vector<int> bins;
+    bins.reserve(points.size());
+
+    int n_bins = sqrt(sqrt(points.size()));
+
+    for (const Point& point: points ) {
+        int i = static_cast<int>(point.get_y() * n_bins * 0.99 / bounds.at("y_max"));
+        int j = static_cast<int>(point.get_x() * n_bins * 0.99 / bounds.at("x_max"));
+
+        if ( i % 2 == 0) {
+            bins.push_back(i * n_bins + j + 1);
+        } else {
+            bins.push_back( (i + 1) * n_bins - j);
+        }
+    }
+
+    return bins;
 }

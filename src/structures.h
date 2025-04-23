@@ -1,15 +1,25 @@
 #pragma once
 #include <vector>
+#include <array>
 #include <memory>
 
 class Point final {
-friend 
+public:
+    Point(double x, double y);
+
+    double get_x() const { return x_; }
+    double get_y() const { return y_; }
+
 private:
-    double x;
-    double y;
-}
+    double x_;
+    double y_;
+};
 
 class Triangle final {
-    std::array<size_t, 3> indexes; 
-    std::vector<std::shared_ptr<Triangle>> adjacentTriangles;
-}
+public:
+    Triangle(std::array<int, 3> indexes, std::vector<std::shared_ptr<Triangle>> adjacentTriangles);
+    Triangle(std::array<int, 3> indexes);
+private:
+    std::array<int, 3> indexes_; 
+    std::vector<std::shared_ptr<Triangle>> adjacentTriangles_;
+};
