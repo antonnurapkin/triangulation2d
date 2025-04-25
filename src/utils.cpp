@@ -18,3 +18,7 @@ std::vector<double> utils::cross_product(const std::vector<double>& vec1, const 
         vec1[0] * vec2[1] - vec1[1] * vec2[0]
     };
 }
+
+std::vector<double> utils::vector_by_points(const Point& point1, const Point& point2) {
+    return std::vector<double> {point2.get_x() - point1.get_x(), point2.get_y() - point1.get_y()};
+}

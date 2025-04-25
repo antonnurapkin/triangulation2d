@@ -14,5 +14,5 @@ namespace preparing {
 
     std::vector<int> bin_sort(std::vector<Point>& points, const std::unordered_map<std::string, double>& bounds);
 
-    void quick_sort(std::vector<double>& vec, std::vector<Point>& points, int start, int end);
+    void quick_sort(std::vector<int>& bins, std::vector<Point>& points, int start, int end);
 } // namespace preparing

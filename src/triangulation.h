@@ -3,7 +3,9 @@
 #include "structures.h"
 
 namespace triangulation {
-    std::vector<std::array<std::array<double>>> get_triangulation(std::vector<std::array<double>>& points);
+    // std::vector<std::array<double, 3>> get_triangulation(std::vector<std::array<double, 2>>& points);
+    void get_triangulation(std::vector<std::array<double, 2>>& points);
 
-    bool is_inside_triangle(const Triangle& triangle, const Point& point);
-} namespace triangulation
+
+    bool is_inside_triangle(const Triangle& triangle, const Point& point, const std::vector<Point>& points);
+} // namespace triangulation

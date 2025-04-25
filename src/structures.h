@@ -19,6 +19,8 @@ class Triangle final {
 public:
     Triangle(std::array<int, 3> indexes, std::vector<std::shared_ptr<Triangle>> adjacentTriangles);
     Triangle(std::array<int, 3> indexes);
+
+    std::array<int, 3> get_points_indexes() const {return indexes_; }
 private:
     std::array<int, 3> indexes_; 
     std::vector<std::shared_ptr<Triangle>> adjacentTriangles_;

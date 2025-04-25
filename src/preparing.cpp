@@ -75,24 +75,24 @@ std::vector<int> preparing::bin_sort(std::vector<Point>& points, const std::unor
     return bins;
 }
 
-void preparing::quick_sort(std::vector<double>& vec, std::vector<Point>& points, int start, int end) {
+void preparing::quick_sort(std::vector<int>& bins, std::vector<Point>& points, int start, int end) {
     if (start < end) {
-        int pivot = vec[end];
+        int pivot = bins[end];
     
         int j = start - 1;
     
         for(int i = start; i < end; i++) {
-            if (vec[i] <= pivot) {
+            if (bins[i] <= pivot) {
                 j++;
-                std::swap(vec[i], vec[j]);
+                std::swap(bins[i], bins[j]);
                 std::swap(points[i], points[j]);
             }
         }
     
-        std::swap(vec[j + 1], vec[end]);
+        std::swap(bins[j + 1], bins[end]);
         std::swap(points[j + 1], points[end]);
     
-        quick_sort(vec, start, j);
-        quick_sort(vec, j + 2, end);
+        quick_sort(bins, points, start, j);
+        quick_sort(bins, points, j + 2, end);
     }
 }
