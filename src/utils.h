@@ -8,4 +8,8 @@ namespace utils {
     std::vector<double> cross_product(const std::vector<double>& vec1, const std::vector<double>& vec2);
 
     std::vector<double> vector_by_points(const Point& point1, const Point& point2);
+
+    void print_vector(std::vector<double> vec);
+
+    std::vector<double> cross_product_with_normal(const std::vector<double>& vec);
 } // namespace utils

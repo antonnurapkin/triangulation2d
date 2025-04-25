@@ -1,4 +1,5 @@
 #include <vector>
+#include <iostream>
 #include "utils.h"
 #include "structures.h"
 
@@ -19,6 +20,25 @@ std::vector<double> utils::cross_product(const std::vector<double>& vec1, const 
     };
 }
 
+std::vector<double> utils::cross_product_with_normal(const std::vector<double>& vec) {
+    // if (vec.size() != 3) {
+    //     throw std::runtime_error("Input vector must have 3 components.");
+    // }
+    return std::vector<double> {
+        -vec[1],  // -v_y
+         vec[0],  // v_x
+         //0.0      // z-компонента всегда 0
+    };
+}
+
 std::vector<double> utils::vector_by_points(const Point& point1, const Point& point2) {
     return std::vector<double> {point2.get_x() - point1.get_x(), point2.get_y() - point1.get_y()};
+}
+
+void utils::print_vector(std::vector<double> vec) {
+    for( int i = 0; i < vec.size(); i++) {
+        std::cout << vec[i] << " ";
+    }
+
+    std::cout << std::endl;
 }
