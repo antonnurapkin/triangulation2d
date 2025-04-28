@@ -12,4 +12,6 @@ namespace utils {
     void print_vector(std::vector<double> vec);
 
     std::vector<double> cross_product_with_normal(const std::vector<double>& vec);
+
+    Point get_centroid(const Triangle& triangle, const std::vector<Point>& points);
 } // namespace utils

@@ -25,8 +25,8 @@ std::vector<double> utils::cross_product_with_normal(const std::vector<double>& 
     //     throw std::runtime_error("Input vector must have 3 components.");
     // }
     return std::vector<double> {
-        -vec[1],  // -v_y
-         vec[0],  // v_x
+        vec[1],  // -v_y
+        -vec[0],  // v_x
          //0.0      // z-компонента всегда 0
     };
 }
@@ -41,4 +41,20 @@ void utils::print_vector(std::vector<double> vec) {
     }
 
     std::cout << std::endl;
+}
+
+Point utils::get_centroid(const Triangle& triangle, const std::vector<Point>& points) {
+    double x_c = (
+        points[triangle.get_points_indexes()[0]].get_x() +
+        points[triangle.get_points_indexes()[1]].get_x() +
+        points[triangle.get_points_indexes()[2]].get_x()
+    ) / 3;
+
+    double y_c = (
+        points[triangle.get_points_indexes()[0]].get_y() +
+        points[triangle.get_points_indexes()[1]].get_y() +
+        points[triangle.get_points_indexes()[2]].get_y()
+    ) / 3;
+
+    return Point(x_c, y_c);
 }

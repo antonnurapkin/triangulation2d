@@ -20,57 +20,66 @@ void triangulation::get_triangulation(std::vector<std::array<double, 2>>& points
 
     std::vector<Point> normalized_points = preparing::normalize_coords(points, bounds);
 
-    triangles.push_back(preparing::create_super_triangle(normalized_points));
-
     std::vector<int> bins = preparing::bin_sort(normalized_points, bounds);
 
     preparing::quick_sort(bins, normalized_points, 0, bins.size());
 
-    normalized_points.emplace_back(1000,1000);
+    triangles.push_back(preparing::create_super_triangle(normalized_points));
+
+    Triangle current_triangle = triangles[0];
 
     for (const Point& point: normalized_points) {
-        std::cout << is_inside_triangle(triangles[0], point, normalized_points) << std::endl;
+        //std::cout << point.get_x() << " " << point.get_y() << " " << is_inside_triangle(triangles[0], point, normalized_points) << std::endl;
+
+        // if (is_inside_triangle(current_triangle, point, normalized_points)) {
+        //     ...
+        // } else {
+            
+        // }
+
     }
 }
 
-// TODO: Расчёт вектора на основе двух точек
+
 bool triangulation::is_inside_triangle(const Triangle& triangle, const Point& point, const std::vector<Point>& points) {
-    std::vector<double> normal {0, 0, 1};
 
-    std::vector<double> N1 = utils::cross_product_with_normal(
-        utils::vector_by_points(
-            points[triangle.get_points_indexes()[0]], 
-            points[triangle.get_points_indexes()[1]]
-        )
-    );
+    const Point& A = points[triangle.get_points_indexes()[0]];
+    const Point& B = points[triangle.get_points_indexes()[1]];
+    const Point& C = points[triangle.get_points_indexes()[2]];
 
-    std::vector<double> N2 = utils::cross_product_with_normal(
-        utils::vector_by_points(
-            points[triangle.get_points_indexes()[1]], 
-            points[triangle.get_points_indexes()[2]]
-        )
-    );
+    auto calculate_area = [](const Point& p1, const Point& p2, const Point& p3) -> double {
+        return 0.5 * std::abs(
+            p1.get_x() * (p2.get_y() - p3.get_y()) +
+            p2.get_x() * (p3.get_y() - p1.get_y()) +
+            p3.get_x() * (p1.get_y() - p2.get_y())
+        );
+    };
 
-    std::vector<double> N3 = utils::cross_product_with_normal(
-        utils::vector_by_points(
-            points[triangle.get_points_indexes()[0]], 
-            points[triangle.get_points_indexes()[2]]
-        )
-    );
+    double S_ABC = calculate_area(A, B, C);
 
-    std::cout << points[triangle.get_points_indexes()[0]].get_x() << " " << points[triangle.get_points_indexes()[0]].get_y() << std::endl;
-    std::cout << points[triangle.get_points_indexes()[1]].get_x() << " " << points[triangle.get_points_indexes()[1]].get_y() << std::endl;
-    std::cout << points[triangle.get_points_indexes()[2]].get_x() << " " << points[triangle.get_points_indexes()[2]].get_y() << std::endl;
+    double S_PAB = calculate_area(point, A, B);
+    double S_PBC = calculate_area(point, B, C);
+    double S_PCA = calculate_area(point, C, A);
 
-    if (
-        utils::dot_product(N1, utils::vector_by_points(point, points[triangle.get_points_indexes()[0]])) >= 0 &&
-        utils::dot_product(N2, utils::vector_by_points(point, points[triangle.get_points_indexes()[1]])) >= 0 &&
-        utils::dot_product(N3, utils::vector_by_points(point, points[triangle.get_points_indexes()[2]])) >= 0
-    ) {
+    double S_total = S_PAB + S_PBC + S_PCA;
+
+    double tolerance = 0.0001;
+
+    if (std::abs(S_total - S_ABC) < tolerance) {
         return true;
-    } else {
-        return false;
     }
+
+    // // Если точка лежит на границе треугольника (одна из площадей равна нулю)
+    // if (S_PAB < tolerance || S_PBC < tolerance || S_PCA < tolerance) {
+    //     return true;
+    // }
+
+    // В остальных случаях точка лежит снаружи
+    return false;
 }
 
+Triangle find_triangle(const Point& point, const Triangle& cur_triangle,  std::vector<Triangle>& trinagles, const std::vector<Point>& points) {
+    Point center = utils::get_centroid(cur_triangle, points);
 
+    
+}
