@@ -1,5 +1,6 @@
 #include <vector>
 #include <iostream>
+#include <memory>
 #include "triangulation.h"
 #include "preparing.h"
 #include "structures.h"
@@ -14,6 +15,7 @@ void triangulation::get_triangulation(std::vector<std::array<double, 2>>& points
     //     throw error
     // }
 
+    // TODO: Сделать вектор указателей
     std::vector<Triangle> triangles;
 
     std::unordered_map<std::string, double> bounds = preparing::get_bounds(points);
@@ -34,13 +36,13 @@ void triangulation::get_triangulation(std::vector<std::array<double, 2>>& points
         // if (is_inside_triangle(current_triangle, point, normalized_points)) {
         //     ...
         // } else {
-            
+        //    shared_prt<Trinagle> current_triangle = find_triangle(point, current_triangle, trinagles, points);
         // }
 
     }
 }
 
-
+// TODO: Доступ через указатель
 bool triangulation::is_inside_triangle(const Triangle& triangle, const Point& point, const std::vector<Point>& points) {
 
     const Point& A = points[triangle.get_points_indexes()[0]];
@@ -78,8 +80,41 @@ bool triangulation::is_inside_triangle(const Triangle& triangle, const Point& po
     return false;
 }
 
-Triangle find_triangle(const Point& point, const Triangle& cur_triangle,  std::vector<Triangle>& trinagles, const std::vector<Point>& points) {
+// TODO: Доступ через указатель
+shared_ptr<Triangle> find_triangle(const Point& point, const Triangle& cur_triangle,  std::vector<Triangle>& trinagles, const std::vector<Point>& points) {
     Point center = utils::get_centroid(cur_triangle, points);
 
-    
+    std::vector<double> N1 = utils::cross_product_with_normal(
+        utils::vector_by_points(
+            points[cur_triangle.get_points_indexes()[0]],
+            points[cur_triangle.get_points_indexes()[1]]
+        )
+    )
+
+    std::vector<double> N2 = utils::cross_product_with_normal(
+        utils::vector_by_points(
+            points[cur_triangle.get_points_indexes()[1]],
+            points[cur_triangle.get_points_indexes()[2]]
+        )
+    )
+
+    std::vector<double> N3 = utils::cross_product_with_normal(
+        utils::vector_by_points(
+            points[cur_triangle.get_points_indexes()[2]],
+            points[cur_triangle.get_points_indexes()[0]]
+        )
+    )
+
+    std::vector<double> vec_to_point = utils::vector_by_points(center, point);
+
+    double S1 = utils::dot_product(N1, vec_to_point);
+    double S2 = utils::dot_product(N2, vec_to_point);
+    double S3 = utils::dot_product(N3, vec_to_point);
+
+    if (S1 > 0 && S1 >= S2 && S1 >= S3) {
+        return *(triangle.get_adjacent(0));
+    } else if (S2 > 0 && S2 >= S1 && S2 >= S3) {
+        return *(triangle.get_adjacent(1));
+    } else if (S3 > 0 && S3 >= S2 && S3 >= S1) {
+        return *(triangle.get_adjacent(2));
 }

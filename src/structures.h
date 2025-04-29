@@ -21,6 +21,9 @@ public:
     Triangle(std::array<int, 3> indexes);
 
     std::array<int, 3> get_points_indexes() const {return indexes_; }
+    int get_index(int index) {return indexes_[index]; }
+    std::shared_ptr<Triangle> get_adjacent(int index) {return adjacentTriangles_[index]; }
+    
 private:
     std::array<int, 3> indexes_; 
     std::vector<std::shared_ptr<Triangle>> adjacentTriangles_;
