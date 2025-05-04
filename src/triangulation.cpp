@@ -81,7 +81,7 @@ bool triangulation::is_inside_triangle(const Triangle& triangle, const Point& po
 }
 
 // TODO: Доступ через указатель
-shared_ptr<Triangle> find_triangle(const Point& point, const Triangle& cur_triangle,  std::vector<Triangle>& trinagles, const std::vector<Point>& points) {
+std::shared_ptr<Triangle> triangulation::find_triangle(const Point& point, const Triangle& cur_triangle, const std::vector<Point>& points) {
     Point center = utils::get_centroid(cur_triangle, points);
 
     std::vector<double> N1 = utils::cross_product_with_normal(
@@ -89,21 +89,21 @@ shared_ptr<Triangle> find_triangle(const Point& point, const Triangle& cur_trian
             points[cur_triangle.get_points_indexes()[0]],
             points[cur_triangle.get_points_indexes()[1]]
         )
-    )
+    );
 
     std::vector<double> N2 = utils::cross_product_with_normal(
         utils::vector_by_points(
             points[cur_triangle.get_points_indexes()[1]],
             points[cur_triangle.get_points_indexes()[2]]
         )
-    )
+    );
 
     std::vector<double> N3 = utils::cross_product_with_normal(
         utils::vector_by_points(
             points[cur_triangle.get_points_indexes()[2]],
             points[cur_triangle.get_points_indexes()[0]]
         )
-    )
+    );
 
     std::vector<double> vec_to_point = utils::vector_by_points(center, point);
 
@@ -112,9 +112,68 @@ shared_ptr<Triangle> find_triangle(const Point& point, const Triangle& cur_trian
     double S3 = utils::dot_product(N3, vec_to_point);
 
     if (S1 > 0 && S1 >= S2 && S1 >= S3) {
-        return *(triangle.get_adjacent(0));
+        return cur_triangle.get_adjacent(0);
     } else if (S2 > 0 && S2 >= S1 && S2 >= S3) {
-        return *(triangle.get_adjacent(1));
-    } else if (S3 > 0 && S3 >= S2 && S3 >= S1) {
-        return *(triangle.get_adjacent(2));
+        return cur_triangle.get_adjacent(1);
+    }
+    else if (S3 > 0 && S3 >= S2 && S3 >= S1) {
+        return cur_triangle.get_adjacent(2);
+    }
+}
+
+
+void triangulation::add_new_triangles(const Point& point, std::shared_ptr<Triangle>& cur_triangle, std::vector<Triangle>& triangles, const std::vector<Point>& points) {
+    std::shared_ptr<Triangle> tri_1 = std::make_shared<Triangle>(point, points[cur_triangle->get_index(0)], points[cur_triangle->get_index(1)]);
+    std::shared_ptr<Triangle> tri_2 = std::make_shared<Triangle>(point, points[cur_triangle->get_index(1)], points[cur_triangle->get_index(2)]);
+    std::shared_ptr<Triangle> tri_3 = std::make_shared<Triangle>(point, points[cur_triangle->get_index(2)], points[cur_triangle->get_index(0)]);
+
+    if (cur_triangle->is_adjacents_exist()) {
+        tri_1->add_adjacent(tri_3);
+        tri_1->add_adjacent(cur_triangle->get_adjacent(0));
+        tri_1->add_adjacent(tri_2);
+        update_adjacent_neighbors(tri_1, cur_triangle, points[tri_1->get_index(1)], points[tri_1->get_index(2)], points);
+
+        tri_2->add_adjacent(tri_1);
+        tri_2->add_adjacent(cur_triangle->get_adjacent(1));
+        tri_2->add_adjacent(tri_3);
+        update_adjacent_neighbors(tri_2, cur_triangle, points[tri_2->get_index(1)], points[tri_2->get_index(2)], points);
+
+        tri_3->add_adjacent(tri_2);
+        tri_3->add_adjacent(cur_triangle->get_adjacent(2));
+        tri_3->add_adjacent(tri_1);
+        update_adjacent_neighbors(tri_3, cur_triangle, points[tri_3->get_index(1)], points[tri_3->get_index(2)], points);
+    }
+}
+
+
+void triangulation::update_adjacent_neighbors(const std::shared_ptr<Triangle>& new_triangle, std::shared_ptr<Triangle>& parent_triangle, const Point& point_1, const Point& point_2, const std::vector<Point>& points){
+    // Данный метод добавляет i-ый новый треугольник в качестве соседа к какому-то соседу большого треугольника
+    const auto& adjacents = parent_triangle->get_all_adjacents();
+    
+    for (int i = 0; i < adjacents.size(); i++) {
+
+        std::shared_ptr<Triangle> adjacent = adjacents[i];
+
+        std::array<int, 3> ids = adjacent->get_points_indexes();
+        std::vector<Point> tri_points;
+        for(int j = 0; j < 3; j++) {
+            tri_points.push_back(points[ids[j]]);
+        }
+        
+        // Если у нас два треугольника имеют 2 общих точки, то они соседи
+        // Тогда i-ый новый треугольник делаем соседом треугольника, который является соседом большого треуголньика
+        if (have_common_edge(tri_points, point_1, point_2)) {
+            for (int j = 0; j < adjacent->get_all_adjacents().size(); j++) {
+                if (adjacent->get_all_adjacents()[j] == parent_triangle) {
+                    adjacent->set_adjacent(j, new_triangle);
+                }
+            }
+        }
+    }
+}
+
+
+bool triangulation::have_common_edge(const std::vector<Point>& triangle_points, const Point& p1, const Point& p2) {
+    return std::find(triangle_points.begin(), triangle_points.end(), p1) != triangle_points.end() &&
+        std::find(triangle_points.begin(), triangle_points.end(), p2) != triangle_points.end();
 }

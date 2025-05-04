@@ -13,5 +13,5 @@ namespace utils {
 
     std::vector<double> cross_product_with_normal(const std::vector<double>& vec);
 
-    Point get_centroid(const Triangle& triangle, const std::vector<Point>& points);
+    Point get_centroid(const Triangle& triangle, const std::vector<Point>& points); // Центр треугольника
 } // namespace utils
