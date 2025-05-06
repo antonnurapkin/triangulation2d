@@ -177,3 +177,36 @@ bool triangulation::have_common_edge(const std::vector<Point>& triangle_points, 
     return std::find(triangle_points.begin(), triangle_points.end(), p1) != triangle_points.end() &&
         std::find(triangle_points.begin(), triangle_points.end(), p2) != triangle_points.end();
 }
+
+
+bool triangulation::check_delauney_condition(const std::shared_ptr<Triangle>& new_tri, const std::shared_ptr<Triangle>& adjacent, const std::vector<Point>& points) {
+    const Point& v2 = get_opposite_vertex(new_tri, adjacent); // opposite vertex os adjacent
+    const Point& v0 = points[new_tri->get_index(0)]; // vertex of new triangle
+    const Point& v1 = points[new_tri->get_index(1)];
+    const Point& v3 = points[new_tri->get_index(2)];
+
+    double cos_a = utils::dot_product(
+        utils::vector_by_points(v0, v1),
+        utils::vector_by_points(v0, v3)
+    );
+
+    double cos_b = utils::dot_product(
+        utils::vector_by_points(v2, v1),
+        utils::vector_by_points(v2, v3)
+    );
+
+    if (cos_a < 0 && cos_b < 0) {
+        return false;
+    } else if (cos_a >= 0 && cos_b >= 0) {
+        return true;
+    }
+    
+    double sin_a = (v0.get_x() - v1.get_x()) * (v0.get_y() - v3.get_y()) - (v0.get_y() - v1.get_y()) * (v0.get_x() - v3.get_x());
+    double sin_b = (v2.get_x() - v3.get_x()) * (v2.get_y() - v1.get_y()) - (v2.get_x() - v1.get_x()) * (v2.get_y() - v3.get_y());
+
+    if (sin_a * cos_b + cos_a * sin_b >= 0) {
+        return true;
+    } else {
+        return false;
+    }
+}
