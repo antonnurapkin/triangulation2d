@@ -127,6 +127,7 @@ void triangulation::add_new_triangles(const Point& point, std::shared_ptr<Triang
     std::shared_ptr<Triangle> tri_2 = std::make_shared<Triangle>(point, points[cur_triangle->get_index(1)], points[cur_triangle->get_index(2)]);
     std::shared_ptr<Triangle> tri_3 = std::make_shared<Triangle>(point, points[cur_triangle->get_index(2)], points[cur_triangle->get_index(0)]);
 
+    // TODO: Добавить проверки на соседей
     if (cur_triangle->is_adjacents_exist()) {
         tri_1->add_adjacent(tri_3);
         tri_1->add_adjacent(cur_triangle->get_adjacent(0));
@@ -147,7 +148,7 @@ void triangulation::add_new_triangles(const Point& point, std::shared_ptr<Triang
 
 
 void triangulation::update_adjacent_neighbors(const std::shared_ptr<Triangle>& new_triangle, std::shared_ptr<Triangle>& parent_triangle, const Point& point_1, const Point& point_2, const std::vector<Point>& points){
-    // Данный метод добавляет i-ый новый треугольник в качестве соседа к какому-то соседу большого треугольника
+    // Данный метод добавляет i-ый новый треугольник в качестве соседа к какому-то соседу cтарого большого треугольника
     const auto& adjacents = parent_triangle->get_all_adjacents();
     
     for (int i = 0; i < adjacents.size(); i++) {

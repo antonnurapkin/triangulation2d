@@ -21,7 +21,10 @@ public:
     Triangle(std::array<int, 3> indexes);
 
     std::array<int, 3> get_points_indexes() const {return indexes_; }
-    int get_index(int index) {return indexes_[index]; }
+
+    int get_index(int index) const {return indexes_[index]; }
+
+    int set_index(int point_index, int place_index) { return indexes_[place_index] == point_index; }
 
     bool is_adjacents_exist() const {return true ? adjacentTriangles_.size() > 0 : false;}
 

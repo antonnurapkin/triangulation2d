@@ -3,6 +3,9 @@
 #include <memory>
 #include "structures.h"
 
+
+// TODO: Сделать безымянный namespace, чтобы у пользователя не было доступа к другим функциям, кроме get_triangulation
+
 namespace triangulation {
     // std::vector<std::array<double, 3>> get_triangulation(std::vector<std::array<double, 2>>& points);
     void get_triangulation(std::vector<std::array<double, 2>>& points);
