@@ -43,17 +43,17 @@ void utils::print_vector(std::vector<double> vec) {
     std::cout << std::endl;
 }
 
-Point utils::get_centroid(const Triangle& triangle, const std::vector<Point>& points) {
+Point utils::get_centroid(const std::shared_ptr<Triangle>& triangle, const std::vector<Point>& points) {
     double x_c = (
-        points[triangle.get_points_indexes()[0]].get_x() +
-        points[triangle.get_points_indexes()[1]].get_x() +
-        points[triangle.get_points_indexes()[2]].get_x()
+        points[triangle->get_points_indexes()[0]].get_x() +
+        points[triangle->get_points_indexes()[1]].get_x() +
+        points[triangle->get_points_indexes()[2]].get_x()
     ) / 3;
 
     double y_c = (
-        points[triangle.get_points_indexes()[0]].get_y() +
-        points[triangle.get_points_indexes()[1]].get_y() +
-        points[triangle.get_points_indexes()[2]].get_y()
+        points[triangle->get_points_indexes()[0]].get_y() +
+        points[triangle->get_points_indexes()[1]].get_y() +
+        points[triangle->get_points_indexes()[2]].get_y()
     ) / 3;
 
     return Point(x_c, y_c);

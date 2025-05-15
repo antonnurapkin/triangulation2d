@@ -1,6 +1,7 @@
 #include <algorithm>
 #include <cmath>
 #include <iostream>
+#include <memory>
 #include "preparing.h"
 #include "structures.h"
 
@@ -45,7 +46,7 @@ std::vector<Point> preparing::normalize_coords(const std::vector<std::array<doub
 }
 
 
-Triangle preparing::create_super_triangle(std::vector<Point>& points) {
+std::shared_ptr<Triangle> preparing::create_super_triangle(std::vector<Point>& points) {
     // Добавление вершин супер-треугольника
     points.emplace_back(0, 100);
     points.emplace_back(100, -100);
@@ -53,7 +54,7 @@ Triangle preparing::create_super_triangle(std::vector<Point>& points) {
 
     int size = points.size();
 
-    return Triangle(std::array<int, 3> {size - 1, size - 2, size - 3});
+    return std::make_shared<Triangle>(std::array<int, 3> {size - 1, size - 2, size - 3});
 }
 
 std::vector<int> preparing::bin_sort(std::vector<Point>& points, const std::unordered_map<std::string, double>& bounds) {
