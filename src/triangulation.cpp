@@ -15,7 +15,6 @@ void triangulation::get_triangulation(std::vector<std::array<double, 2>>& points
     //     throw error
     // }
 
-    // TODO: Сделать вектор указателей
     std::vector<std::shared_ptr<Triangle>> triangles;
 
     std::unordered_map<std::string, double> bounds = preparing::get_bounds(points);
@@ -34,12 +33,17 @@ void triangulation::get_triangulation(std::vector<std::array<double, 2>>& points
         std::cout << point.get_x() << " " << point.get_y() << " " << is_inside_triangle(triangles[0], point, normalized_points) << std::endl;
 
         if (is_inside_triangle(current_triangle, point, normalized_points)) {
-             ...
+            add_new_triangles(point, current_triangle, triangles, normalized_points);
         } else {
-            shared_prt<Trinagle> current_triangle = find_triangle(point, current_triangle, trinagles, points);
+            std::shared_ptr<Triangle> current_triangle = find_triangle(point, current_triangle, normalized_points);
         }
-
     }
+
+    triangles.erase(triangles.begin()); // removing super-triangle
+    
+
+
+
 }
 
 // TODO: Доступ через указатель
@@ -122,27 +126,43 @@ std::shared_ptr<Triangle> triangulation::find_triangle(const Point& point, const
 }
 
 
-void triangulation::add_new_triangles(const Point& point, std::shared_ptr<Triangle>& cur_triangle, std::vector<Triangle>& triangles, const std::vector<Point>& points) {
-    std::shared_ptr<Triangle> tri_1 = std::make_shared<Triangle>(point, points[cur_triangle->get_point_index(0)], points[cur_triangle->get_point_index(1)]);
-    std::shared_ptr<Triangle> tri_2 = std::make_shared<Triangle>(point, points[cur_triangle->get_point_index(1)], points[cur_triangle->get_point_index(2)]);
-    std::shared_ptr<Triangle> tri_3 = std::make_shared<Triangle>(point, points[cur_triangle->get_point_index(2)], points[cur_triangle->get_point_index(0)]);
+void triangulation::add_new_triangles(const Point& point, std::shared_ptr<Triangle>& parent_triangle, std::vector<std::shared_ptr<Triangle>>& triangles, const std::vector<Point>& points) {
+    std::shared_ptr<Triangle> tri_1 = std::make_shared<Triangle>(point, points[parent_triangle->get_point_index(0)], points[parent_triangle->get_point_index(1)]);
+    std::shared_ptr<Triangle> tri_2 = std::make_shared<Triangle>(point, points[parent_triangle->get_point_index(1)], points[parent_triangle->get_point_index(2)]);
+    std::shared_ptr<Triangle> tri_3 = std::make_shared<Triangle>(point, points[parent_triangle->get_point_index(2)], points[parent_triangle->get_point_index(0)]);
 
-    // TODO: Добавить проверки на соседей
-    if (cur_triangle->is_adjacents_exist()) {
+    if (parent_triangle->is_adjacents_exist()) {
         tri_1->add_adjacent(tri_3);
-        tri_1->add_adjacent(cur_triangle->get_adjacent(0));
         tri_1->add_adjacent(tri_2);
-        update_adjacent_neighbors(tri_1, cur_triangle, points[tri_1->get_point_index(1)], points[tri_1->get_point_index(2)], points);
+        add_external_adjacent(tri_1, parent_triangle, points);
 
+        triangles.push_back(tri_1);
+        
         tri_2->add_adjacent(tri_1);
-        tri_2->add_adjacent(cur_triangle->get_adjacent(1));
         tri_2->add_adjacent(tri_3);
-        update_adjacent_neighbors(tri_2, cur_triangle, points[tri_2->get_point_index(1)], points[tri_2->get_point_index(2)], points);
+        add_external_adjacent(tri_2, parent_triangle, points);
+
+        triangles.push_back(tri_2);
 
         tri_3->add_adjacent(tri_2);
-        tri_3->add_adjacent(cur_triangle->get_adjacent(2));
         tri_3->add_adjacent(tri_1);
-        update_adjacent_neighbors(tri_3, cur_triangle, points[tri_3->get_point_index(1)], points[tri_3->get_point_index(2)], points);
+        add_external_adjacent(tri_3, parent_triangle, points);
+
+        triangles.push_back(tri_3);
+    }
+}
+
+
+void triangulation::add_external_adjacent(std::shared_ptr<Triangle>& new_tri, std::shared_ptr<Triangle>& parent_tri, const std::vector<Point>& points) {
+    for (auto& adjacent : parent_tri->get_all_adjacents()) {
+        if (have_common_edge(new_tri, adjacent)) {
+            new_tri->add_adjacent(adjacent);
+            update_adjacent_neighbors(new_tri, parent_tri, points[new_tri->get_point_index(1)], points[new_tri->get_point_index(2)], points);
+
+            if (!check_delauney_condition(new_tri, adjacent, points)) {
+                swap_edge(new_tri, adjacent, points);
+            }
+        }
     }
 }
 
@@ -223,7 +243,7 @@ bool triangulation::check_delauney_condition(const std::shared_ptr<Triangle>& ne
     }
 }
 
-void triangulation::swap_edge(std::shared_ptr<Triangle>& new_triangle, std::shared_ptr<Triangle>& adjacent, std::vector<Triangle>& triangles, const std::vector<Point>& points) {
+void triangulation::swap_edge(std::shared_ptr<Triangle>& new_triangle, std::shared_ptr<Triangle>& adjacent, const std::vector<Point>& points) {
     int v2_index = get_opposite_vertex(new_triangle, adjacent); // opposite vertex os adjacent
     int v0_index = new_triangle->get_point_index(0); // vertex of new triangle
     int v1_index = new_triangle->get_point_index(1);

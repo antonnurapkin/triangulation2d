@@ -14,7 +14,9 @@ namespace triangulation {
 
     std::shared_ptr<Triangle> find_triangle(const Point& point, const std::shared_ptr<Triangle>& cur_triangle, const std::vector<Point>& points);
 
-    void add_new_triangles(const Point& point, std::shared_ptr<Triangle>& cur_triangle, std::vector<Triangle>& triangles, const std::vector<Point>& points);
+    void add_new_triangles(const Point& point, std::shared_ptr<Triangle>& parent_triangle, std::vector<std::shared_ptr<Triangle>>& triangles, const std::vector<Point>& points);
+
+    void add_external_adjacent(std::shared_ptr<Triangle>& new_tri, std::shared_ptr<Triangle>& parent_tri, const std::vector<Point>& points);
 
     void update_adjacent_neighbors(const std::shared_ptr<Triangle>& new_triangle, std::shared_ptr<Triangle>& parent_triangle, const Point& point_1, const Point& point_2, const std::vector<Point>& points);
 
@@ -26,7 +28,7 @@ namespace triangulation {
 
     int get_opposite_vertex(const std::shared_ptr<Triangle>& known_tri, const std::shared_ptr<Triangle>& unknown_tri); 
 
-    void swap_edge(std::shared_ptr<Triangle>& new_triangle, std::shared_ptr<Triangle>& adjacent, std::vector<Triangle>& triangles, const std::vector<Point>& points);
+    void swap_edge(std::shared_ptr<Triangle>& new_triangle, std::shared_ptr<Triangle>& adjacent, const std::vector<Point>& points);
 
     void set_new_adjacents(std::shared_ptr<Triangle>& triangle, std::vector<std::shared_ptr<Triangle>>& adjacents, const std::vector<Point>& points);
 } // namespace triangulation
