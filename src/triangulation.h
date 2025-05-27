@@ -7,8 +7,10 @@
 // TODO: Сделать безымянный namespace, чтобы у пользователя не было доступа к другим функциям, кроме get_triangulation
 
 namespace triangulation {
+    using trianglesArrayLikeDataType = std::vector<std::array<std::array<double, 2>, 3>>;
+
     // std::vector<std::array<double, 3>> get_triangulation(std::vector<std::array<double, 2>>& points);
-    void get_triangulation(std::vector<std::array<double, 2>>& points);
+    trianglesArrayLikeDataType get_triangulation(std::vector<std::array<double, 2>>& points);
 
     bool is_inside_triangle(const std::shared_ptr<Triangle>& triangle, const Point& point, const std::vector<Point>& points);
 
@@ -31,4 +33,6 @@ namespace triangulation {
     void swap_edge(std::shared_ptr<Triangle>& new_triangle, std::shared_ptr<Triangle>& adjacent, const std::vector<Point>& points);
 
     void set_new_adjacents(std::shared_ptr<Triangle>& triangle, std::vector<std::shared_ptr<Triangle>>& adjacents, const std::vector<Point>& points);
+
+    trianglesArrayLikeDataType convert_to_array_like(const std::vector<std::shared_ptr<Triangle>>& triangles, const std::vector<Point>& points, const std::unordered_map<std::string, double>& bounds);
 } // namespace triangulation

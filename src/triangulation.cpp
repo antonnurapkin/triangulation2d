@@ -1,6 +1,7 @@
 #include <vector>
 #include <iostream>
 #include <memory>
+#include <unordered_set>
 #include "triangulation.h"
 #include "preparing.h"
 #include "structures.h"
@@ -8,7 +9,7 @@
 
 using vectorTriangles = std::vector<std::array<double, 3>>;
 
-void triangulation::get_triangulation(std::vector<std::array<double, 2>>& points) {
+triangulation::trianglesArrayLikeDataType triangulation::get_triangulation(std::vector<std::array<double, 2>>& points) {
 
     // TODO: Добавить обработку пустого вектора
     // if (points.empty()) {
@@ -40,9 +41,8 @@ void triangulation::get_triangulation(std::vector<std::array<double, 2>>& points
     }
 
     triangles.erase(triangles.begin()); // removing super-triangle
-    
 
-
+    return convert_to_array_like(triangles, normalized_points, bounds);
 
 }
 
@@ -294,4 +294,41 @@ void triangulation::set_new_adjacents(std::shared_ptr<Triangle>& triangle, std::
             }
         }
     }
+}
+
+int triangulation::get_opposite_vertex(const std::shared_ptr<Triangle>& known_tri, const std::shared_ptr<Triangle>& unknown_tri) {
+    std::array<int, 3> known_points = known_tri->get_points_indexes(); // known because it was created recently
+    std::array<int, 3> unknown_points = unknown_tri->get_points_indexes();
+
+    std::unordered_set<int> known_set(known_points.begin(), known_points.end());
+
+    for (const int idx : unknown_points) {
+        if (known_set.find(idx) == known_set.end()) {
+            return idx; // Найдена вершина, которой нет в known_tri
+        }
+    }
+
+    return -1;
+}
+
+triangulation::trianglesArrayLikeDataType triangulation::convert_to_array_like(const std::vector<std::shared_ptr<Triangle>>& triangles, const std::vector<Point>& points, const std::unordered_map<std::string, double>& bounds) {
+    trianglesArrayLikeDataType tris_array_like;
+    tris_array_like.reserve(triangles.size());
+
+    double delta_max = std::max(bounds.at("x_max") - bounds.at("x_min"), bounds.at("y_max") - bounds.at("y_min"));
+
+    for (const auto& tri : triangles) {
+        const auto& indexes = tri->get_points_indexes();
+
+        std::array<std::array<double, 2>, 3> triangle_coords;
+
+        for (size_t i = 0; i < 3; ++i) {
+            const Point& p = points[indexes[i]];
+            triangle_coords[i] = { {p.get_x() * delta_max + bounds.at("x_min"), p.get_y() * delta_max + bounds.at("y_min")}};
+        }
+
+        tris_array_like.emplace_back(std::move(triangle_coords));
+    }
+
+    return tris_array_like;
 }
