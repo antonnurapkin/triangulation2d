@@ -8,6 +8,10 @@ class Point final {
 public:
     Point(double x, double y);
 
+    bool operator==(const Point& other) const {
+        return x_ == other.x_ && y_ == other.y_;
+    }
+
     double get_x() const { return x_; }
     double get_y() const { return y_; }
 
@@ -20,6 +24,12 @@ class Triangle final {
 public:
     Triangle(std::array<int, 3> indexes, std::vector<std::shared_ptr<Triangle>> adjacentTriangles);
     Triangle(std::array<int, 3> indexes);
+
+    Triangle(const Triangle& other);
+
+    Triangle& operator=(const Triangle& other);
+
+    Triangle(Triangle&& moved);
 
     // for points
     std::array<int, 3> get_points_indexes() const {return indexes_; }
