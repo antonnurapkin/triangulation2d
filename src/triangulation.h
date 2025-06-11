@@ -1,11 +1,12 @@
 #pragma once
 #include <vector>
 #include <memory>
+#include <unordered_map>
 #include "structures.h"
 #include "unordered_map"
 
 
-// TODO: Сделать безымянный namespace, чтобы у пользователя не было доступа к другим функциям, кроме get_triangulation
+// TODO: пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ namespace, пїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅпїЅ get_triangulation
 
 namespace triangulation {
     using trianglesArrayLikeDataType = std::vector<std::array<std::array<double, 2>, 3>>;
