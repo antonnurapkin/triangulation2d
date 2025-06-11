@@ -6,7 +6,7 @@
 #include "unordered_map"
 
 
-// TODO: ������� ���������� namespace, ����� � ������������ �� ���� ������� � ������ ��������, ����� get_triangulation
+// TODO: unnamed namespace, try/except/, remove kostyl` with creating current_tri in add_new_triangles()
 
 namespace triangulation {
     using trianglesArrayLikeDataType = std::vector<std::array<std::array<double, 2>, 3>>;
@@ -18,7 +18,7 @@ namespace triangulation {
 
     std::shared_ptr<Triangle> find_triangle(const Point& point, const std::shared_ptr<Triangle>& cur_triangle, const std::vector<Point>& points);
 
-    void add_new_triangles(int index, std::shared_ptr<Triangle>& parent_triangle, std::vector<std::shared_ptr<Triangle>>& triangles, const std::vector<Point>& points);
+    std::shared_ptr<Triangle> add_new_triangles(int index, std::shared_ptr<Triangle>& parent_triangle, std::vector<std::shared_ptr<Triangle>>& triangles, const std::vector<Point>& points);
 
     void add_external_adjacent(std::shared_ptr<Triangle>& new_tri, std::shared_ptr<Triangle>& parent_tri, const std::vector<Point>& points);
 
@@ -36,5 +36,7 @@ namespace triangulation {
 
     void set_new_adjacents(std::shared_ptr<Triangle>& triangle, std::vector<std::shared_ptr<Triangle>>& adjacents, const std::vector<Point>& points);
 
+    void remove_supplementary_triangles(std::vector<std::shared_ptr<Triangle>>& triangles, const std::vector<Point>& points);
+    
     trianglesArrayLikeDataType convert_to_array_like(const std::vector<std::shared_ptr<Triangle>>& triangles, const std::vector<Point>& points, const std::unordered_map<std::string, double>& bounds);
 } // namespace triangulation

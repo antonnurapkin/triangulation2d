@@ -15,13 +15,6 @@ public:
     double get_x() const { return x_; }
     double get_y() const { return y_; }
 
-    bool operator==(const Point& point) const {
-        if (x_ == point.x_ && y_ == point.y_) {
-            return true;
-        }
-        else { return false; }
-    }
-
 private:
     double x_;
     double y_;

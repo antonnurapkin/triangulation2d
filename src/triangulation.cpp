@@ -1,4 +1,5 @@
 #include <vector>
+#include <algorithm>
 #include <iostream>
 #include <memory>
 #include <unordered_set>
@@ -34,13 +35,13 @@ triangulation::trianglesArrayLikeDataType triangulation::get_triangulation(std::
         std::cout << normalized_points[i].get_x() << " " << normalized_points[i].get_y() << " " << is_inside_triangle(triangles[0], normalized_points[i], normalized_points) << std::endl;
 
         if (is_inside_triangle(current_triangle, normalized_points[i], normalized_points)) {
-            add_new_triangles(i, current_triangle, triangles, normalized_points);
+            current_triangle = add_new_triangles(i, current_triangle, triangles, normalized_points);
         } else {
-            std::shared_ptr<Triangle> current_triangle = find_triangle(normalized_points[i], current_triangle, normalized_points);
+            current_triangle = find_triangle(normalized_points[i], current_triangle, normalized_points);
         }
     }
 
-    triangles.erase(triangles.begin()); // removing super-triangle
+    remove_supplementary_triangles(triangles, normalized_points);
 
     return convert_to_array_like(triangles, normalized_points, bounds);
 }
@@ -125,28 +126,40 @@ std::shared_ptr<Triangle> triangulation::find_triangle(const Point& point, const
 }
 
 
-void triangulation::add_new_triangles(int index, std::shared_ptr<Triangle>& parent_triangle, std::vector<std::shared_ptr<Triangle>>& triangles, const std::vector<Point>& points) {
+std::shared_ptr<Triangle> triangulation::add_new_triangles(int index, std::shared_ptr<Triangle>& parent_triangle, std::vector<std::shared_ptr<Triangle>>& triangles, const std::vector<Point>& points) {
     std::shared_ptr<Triangle> tri_1 = std::make_shared<Triangle>(index, parent_triangle->get_point_index(0), parent_triangle->get_point_index(1));
     std::shared_ptr<Triangle> tri_2 = std::make_shared<Triangle>(index, parent_triangle->get_point_index(1), parent_triangle->get_point_index(2));
     std::shared_ptr<Triangle> tri_3 = std::make_shared<Triangle>(index, parent_triangle->get_point_index(2), parent_triangle->get_point_index(0));
 
-    if (parent_triangle->is_adjacents_exist()) {
-        tri_1->add_adjacent(tri_3);
-        tri_1->add_adjacent(tri_2);
-        add_external_adjacent(tri_1, parent_triangle, points);
-        
-        tri_2->add_adjacent(tri_1);
-        tri_2->add_adjacent(tri_3);
-        add_external_adjacent(tri_2, parent_triangle, points);
+    tri_1->add_adjacent(tri_3);
+    tri_1->add_adjacent(tri_2);
 
-        tri_3->add_adjacent(tri_2);
-        tri_3->add_adjacent(tri_1);
+    tri_2->add_adjacent(tri_1);
+    tri_2->add_adjacent(tri_3);
+
+    tri_3->add_adjacent(tri_2);
+    tri_3->add_adjacent(tri_1);
+    
+    if (parent_triangle->is_adjacents_exist()) {
+        add_external_adjacent(tri_1, parent_triangle, points);
+        add_external_adjacent(tri_2, parent_triangle, points);
         add_external_adjacent(tri_3, parent_triangle, points);
     }
 
     triangles.push_back(tri_1);
     triangles.push_back(tri_2);
-    triangles.push_back(tri_3);
+    triangles.push_back(tri_3);   
+    
+    triangles.erase(
+        std::remove_if(
+            triangles.begin(), 
+            triangles.end(), 
+            [&parent_triangle](const std::shared_ptr<Triangle>& tri) { return true ? tri == parent_triangle : false;}
+        ),
+        triangles.end()
+    );
+
+    return tri_1;
 }
 
 
@@ -328,4 +341,18 @@ triangulation::trianglesArrayLikeDataType triangulation::convert_to_array_like(c
     }
 
     return tris_array_like;
+}
+
+void triangulation::remove_supplementary_triangles(std::vector<std::shared_ptr<Triangle>>& triangles, const std::vector<Point>& points) {
+    triangles.erase(
+        std::remove_if(triangles.begin(), triangles.end(),
+            [&points](const std::shared_ptr<Triangle>& tri) {
+                for (const int id : tri->get_points_indexes()) {
+                    if (abs(points[id].get_x()) == 100 || abs(points[id].get_y()) == 100) {
+                        return true;
+                    }
+                }
+                return false;
+            }),
+        triangles.end());
 }
