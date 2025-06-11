@@ -15,6 +15,13 @@ public:
     double get_x() const { return x_; }
     double get_y() const { return y_; }
 
+    bool operator==(const Point& point) const {
+        if (x_ == point.x_ && y_ == point.y_) {
+            return true;
+        }
+        else { return false; }
+    }
+
 private:
     double x_;
     double y_;
@@ -24,6 +31,7 @@ class Triangle final {
 public:
     Triangle(std::array<int, 3> indexes, std::vector<std::shared_ptr<Triangle>> adjacentTriangles);
     Triangle(std::array<int, 3> indexes);
+    Triangle(int index1, int index2, int index3);
 
     Triangle(const Triangle& other);
 
