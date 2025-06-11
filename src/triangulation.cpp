@@ -24,26 +24,25 @@ triangulation::trianglesArrayLikeDataType triangulation::get_triangulation(std::
 
     std::vector<int> bins = preparing::bin_sort(normalized_points, bounds);
 
-    preparing::quick_sort(bins, normalized_points, 0, bins.size());
+    preparing::quick_sort(bins, normalized_points, 0, bins.size() - 1);
 
     triangles.push_back(preparing::create_super_triangle(normalized_points));
 
     std::shared_ptr<Triangle> current_triangle = triangles[0];
 
-    for (const Point& point: normalized_points) {
-        std::cout << point.get_x() << " " << point.get_y() << " " << is_inside_triangle(triangles[0], point, normalized_points) << std::endl;
+    for (int i = 0; i < normalized_points.size(); i++) {
+        std::cout << normalized_points[i].get_x() << " " << normalized_points[i].get_y() << " " << is_inside_triangle(triangles[0], normalized_points[i], normalized_points) << std::endl;
 
-        if (is_inside_triangle(current_triangle, point, normalized_points)) {
-            add_new_triangles(point, current_triangle, triangles, normalized_points);
+        if (is_inside_triangle(current_triangle, normalized_points[i], normalized_points)) {
+            add_new_triangles(i, current_triangle, triangles, normalized_points);
         } else {
-            std::shared_ptr<Triangle> current_triangle = find_triangle(point, current_triangle, normalized_points);
+            std::shared_ptr<Triangle> current_triangle = find_triangle(normalized_points[i], current_triangle, normalized_points);
         }
     }
 
     triangles.erase(triangles.begin()); // removing super-triangle
 
     return convert_to_array_like(triangles, normalized_points, bounds);
-
 }
 
 // TODO: Доступ через указатель
@@ -126,30 +125,28 @@ std::shared_ptr<Triangle> triangulation::find_triangle(const Point& point, const
 }
 
 
-void triangulation::add_new_triangles(const Point& point, std::shared_ptr<Triangle>& parent_triangle, std::vector<std::shared_ptr<Triangle>>& triangles, const std::vector<Point>& points) {
-    std::shared_ptr<Triangle> tri_1 = std::make_shared<Triangle>(point, points[parent_triangle->get_point_index(0)], points[parent_triangle->get_point_index(1)]);
-    std::shared_ptr<Triangle> tri_2 = std::make_shared<Triangle>(point, points[parent_triangle->get_point_index(1)], points[parent_triangle->get_point_index(2)]);
-    std::shared_ptr<Triangle> tri_3 = std::make_shared<Triangle>(point, points[parent_triangle->get_point_index(2)], points[parent_triangle->get_point_index(0)]);
+void triangulation::add_new_triangles(int index, std::shared_ptr<Triangle>& parent_triangle, std::vector<std::shared_ptr<Triangle>>& triangles, const std::vector<Point>& points) {
+    std::shared_ptr<Triangle> tri_1 = std::make_shared<Triangle>(index, parent_triangle->get_point_index(0), parent_triangle->get_point_index(1));
+    std::shared_ptr<Triangle> tri_2 = std::make_shared<Triangle>(index, parent_triangle->get_point_index(1), parent_triangle->get_point_index(2));
+    std::shared_ptr<Triangle> tri_3 = std::make_shared<Triangle>(index, parent_triangle->get_point_index(2), parent_triangle->get_point_index(0));
 
     if (parent_triangle->is_adjacents_exist()) {
         tri_1->add_adjacent(tri_3);
         tri_1->add_adjacent(tri_2);
         add_external_adjacent(tri_1, parent_triangle, points);
-
-        triangles.push_back(tri_1);
         
         tri_2->add_adjacent(tri_1);
         tri_2->add_adjacent(tri_3);
         add_external_adjacent(tri_2, parent_triangle, points);
 
-        triangles.push_back(tri_2);
-
         tri_3->add_adjacent(tri_2);
         tri_3->add_adjacent(tri_1);
         add_external_adjacent(tri_3, parent_triangle, points);
-
-        triangles.push_back(tri_3);
     }
+
+    triangles.push_back(tri_1);
+    triangles.push_back(tri_2);
+    triangles.push_back(tri_3);
 }
 
 

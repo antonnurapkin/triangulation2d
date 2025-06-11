@@ -10,6 +10,10 @@ Triangle::Triangle(std::array<int, 3> indexes, std::vector<std::shared_ptr<Trian
 
 Triangle::Triangle(std::array<int, 3> indexes) : indexes_(indexes) {};
 
+Triangle::Triangle(int index1, int index2, int index3) {
+    indexes_ = std::array<int, 3> {{index1, index2, index3}};
+}
+
 std::set<std::pair<int, int>> Triangle::get_edges() const {
     std::set<std::pair<int, int>> result;
     for (int i = 0; i < 3; ++i) {

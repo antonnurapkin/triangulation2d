@@ -2,6 +2,7 @@
 #include <vector>
 #include <memory>
 #include "structures.h"
+#include "unordered_map"
 
 
 // TODO: Сделать безымянный namespace, чтобы у пользователя не было доступа к другим функциям, кроме get_triangulation
@@ -16,7 +17,7 @@ namespace triangulation {
 
     std::shared_ptr<Triangle> find_triangle(const Point& point, const std::shared_ptr<Triangle>& cur_triangle, const std::vector<Point>& points);
 
-    void add_new_triangles(const Point& point, std::shared_ptr<Triangle>& parent_triangle, std::vector<std::shared_ptr<Triangle>>& triangles, const std::vector<Point>& points);
+    void add_new_triangles(int index, std::shared_ptr<Triangle>& parent_triangle, std::vector<std::shared_ptr<Triangle>>& triangles, const std::vector<Point>& points);
 
     void add_external_adjacent(std::shared_ptr<Triangle>& new_tri, std::shared_ptr<Triangle>& parent_tri, const std::vector<Point>& points);
 
