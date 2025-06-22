@@ -44,3 +44,11 @@ std::set<std::pair<int, int>> Triangle::get_edges() const {
     }
     return result;
 }
+
+int Triangle::get_index_of_adjacent(std::shared_ptr<Triangle> adj) {
+    for (int i = 0; i < get_all_adjacents().size(); i++) {
+        if (get_adjacent(i) == adj) {
+            return i;
+        }
+    }
+}

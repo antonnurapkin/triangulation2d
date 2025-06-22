@@ -34,11 +34,11 @@ triangulation::trianglesArrayLikeDataType triangulation::get_triangulation(std::
     for (int i = 0; i < normalized_points.size(); i++) {
         std::cout << normalized_points[i].get_x() << " " << normalized_points[i].get_y() << " " << is_inside_triangle(triangles[0], normalized_points[i], normalized_points) << std::endl;
 
-        if (is_inside_triangle(current_triangle, normalized_points[i], normalized_points)) {
-            current_triangle = add_new_triangles(i, current_triangle, triangles, normalized_points);
-        } else {
+        while (!is_inside_triangle(current_triangle, normalized_points[i], normalized_points)) {
             current_triangle = find_triangle(normalized_points[i], current_triangle, normalized_points);
         }
+
+        current_triangle = add_new_triangles(i, current_triangle, triangles, normalized_points);
     }
 
     remove_supplementary_triangles(triangles, normalized_points);
@@ -118,11 +118,12 @@ std::shared_ptr<Triangle> triangulation::find_triangle(const Point& point, const
     if (S1 > 0 && S1 >= S2 && S1 >= S3) {
         return cur_triangle->get_adjacent(0);
     } else if (S2 > 0 && S2 >= S1 && S2 >= S3) {
-        return cur_triangle->get_adjacent(1);
-    }
-    else if (S3 > 0 && S3 >= S2 && S3 >= S1) {
         return cur_triangle->get_adjacent(2);
     }
+    else if (S3 > 0 && S3 >= S2 && S3 >= S1) {
+        return cur_triangle->get_adjacent(1);
+    }
+    return cur_triangle;
 }
 
 
@@ -259,20 +260,14 @@ void triangulation::swap_edge(std::shared_ptr<Triangle>& new_triangle, std::shar
     int v1_index = new_triangle->get_point_index(1);
     int v3_index = new_triangle->get_point_index(2);
 
-    new_triangle->clear_adjacents();
-    adjacent->clear_adjacents();
+    // This vector will be used as set of all adjacents of the resulting quadrilateral
+    std::vector <std::shared_ptr<Triangle>> all_adjacents;
 
-    // create new triangles 
-    new_triangle->set_point_index(v2_index, 2);
-    new_triangle->add_adjacent(adjacent);
-
-    adjacent->set_point_index(v2_index, 0);
-    adjacent->set_point_index(v3_index, 1);
-    adjacent->set_point_index(v0_index, 2);
-    adjacent->add_adjacent(new_triangle);
-
-    // set of adjacents
-    std::vector <std::shared_ptr<Triangle>> all_adjacents = {new_triangle->get_adjacent(0), new_triangle->get_adjacent(2)};
+    for (const auto& adj : new_triangle->get_all_adjacents()) {
+        if (adj != adjacent) {
+            all_adjacents.push_back(adj);
+        }
+    }
 
     for (const auto& adj : adjacent->get_all_adjacents()) {
         if (adj != new_triangle) {
@@ -280,27 +275,44 @@ void triangulation::swap_edge(std::shared_ptr<Triangle>& new_triangle, std::shar
         }
     }
 
+    new_triangle->clear_adjacents();
+    adjacent->clear_adjacents();
+
+    // create new triangles 
+    new_triangle->set_point_index(v0_index, 0);   // this line is unnecassary, but it reeds more clearly
+    new_triangle->set_point_index(v2_index, 1);
+    new_triangle->set_point_index(v1_index, 2);
+    new_triangle->add_adjacent(adjacent);
+
+    adjacent->set_point_index(v0_index, 0);
+    adjacent->set_point_index(v2_index, 1);
+    adjacent->set_point_index(v3_index, 2);
+    adjacent->add_adjacent(new_triangle);
+
     set_new_adjacents(new_triangle, all_adjacents, points);
     set_new_adjacents(adjacent, all_adjacents, points);
 }
 
 void triangulation::set_new_adjacents(std::shared_ptr<Triangle>& triangle, std::vector<std::shared_ptr<Triangle>>& adjacents, const std::vector<Point>& points) {
-    std::array<std::pair<int, int>, 3> edges = { {
-            {0, 1},
-            {1, 2},
-            {2, 0}
+    std::array<std::pair<int, int>, 2> edges = { {
+            // {0, 1},  // beacause adjacent for edge with indexes [0, 1] was inserted when the triangle was created
+            {0, 2},
+            {1, 2}
         }};
 
-    for (auto& adjacent : adjacents) {
-        std::vector<Point> vertices = {
-            points[adjacent->get_point_index(0)],
-            points[adjacent->get_point_index(1)],
-            points[adjacent->get_point_index(2)],
-        };
-        for (const auto& edge : edges) {
+    for (const auto& edge : edges) {
+        for (auto& adjacent : adjacents) {
+            std::vector<Point> vertices = {
+                points[adjacent->get_point_index(0)],
+                points[adjacent->get_point_index(1)],
+                points[adjacent->get_point_index(2)],
+                };
+
             if (have_common_edge(vertices, points[triangle->get_point_index(edge.first)], points[triangle->get_point_index(edge.second)])) {
                 triangle->add_adjacent(adjacent);
-                adjacent->add_adjacent(triangle);
+
+                int index = adjacent->get_index_of_adjacent(triangle);
+                adjacent->set_adjacent(index, triangle); // TODO: set new adj to old adjacent's place
             }
         }
     }
