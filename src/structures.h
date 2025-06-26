@@ -37,7 +37,7 @@ public:
 
     int get_point_index(int index) const {return indexes_[index]; }
 
-    int set_point_index(int point_index, int place_index) { return indexes_[place_index] == point_index; }
+    void set_point_index(int point_index, int place_index) { indexes_[place_index] = point_index; }
 
     //for edges
     std::set<std::pair<int, int>> get_edges() const;

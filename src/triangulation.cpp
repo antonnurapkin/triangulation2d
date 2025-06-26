@@ -289,11 +289,11 @@ void triangulation::swap_edge(std::shared_ptr<Triangle>& new_triangle, std::shar
     adjacent->set_point_index(v3_index, 2);
     adjacent->add_adjacent(new_triangle);
 
-    set_new_adjacents(new_triangle, all_adjacents, points);
-    set_new_adjacents(adjacent, all_adjacents, points);
+    set_new_adjacents(new_triangle, adjacent, all_adjacents, points);
+    set_new_adjacents(adjacent, new_triangle, all_adjacents, points);
 }
 
-void triangulation::set_new_adjacents(std::shared_ptr<Triangle>& triangle, std::vector<std::shared_ptr<Triangle>>& adjacents, const std::vector<Point>& points) {
+void triangulation::set_new_adjacents(std::shared_ptr<Triangle>& triangle, std::shared_ptr<Triangle>& other_triangle, std::vector<std::shared_ptr<Triangle>>& adjacents, const std::vector<Point>& points) {
     std::array<std::pair<int, int>, 2> edges = { {
             // {0, 1},  // beacause adjacent for edge with indexes [0, 1] was inserted when the triangle was created
             {0, 2},
@@ -312,6 +312,11 @@ void triangulation::set_new_adjacents(std::shared_ptr<Triangle>& triangle, std::
                 triangle->add_adjacent(adjacent);
 
                 int index = adjacent->get_index_of_adjacent(triangle);
+                // TODO: Где-то здесь происходит добавление лишнего треугольника
+
+                if (index > 3) { // this means what this adjacent has not triangle as neighbor
+                    index = adjacent->get_index_of_adjacent(other_triangle);
+                }
                 adjacent->set_adjacent(index, triangle); // TODO: set new adj to old adjacent's place
             }
         }
