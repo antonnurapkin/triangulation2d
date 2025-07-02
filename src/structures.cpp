@@ -51,4 +51,11 @@ int Triangle::get_index_of_adjacent(std::shared_ptr<Triangle> adj) {
             return i;
         }
     }
+    return -1;
+}
+
+void Triangle::set_adjacent(int index, const std::shared_ptr<Triangle>& adjacent) {
+    if (index < 3 && std::find(adjacentTriangles_.begin(), adjacentTriangles_.end(), adjacent) == adjacentTriangles_.end()) {
+        adjacentTriangles_[index] = adjacent;
+    }
 }

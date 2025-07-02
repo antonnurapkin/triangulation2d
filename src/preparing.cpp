@@ -48,7 +48,7 @@ std::vector<Point> preparing::normalize_coords(const std::vector<std::array<doub
 
 std::shared_ptr<Triangle> preparing::create_super_triangle(std::vector<Point>& points) {
     // Добавление вершин супер-треугольника
-    points.emplace_back(0, 100);
+    points.emplace_back(2, 100);
     points.emplace_back(100, -100);
     points.emplace_back(-100, -100);
 

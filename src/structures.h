@@ -51,7 +51,7 @@ public:
 
     void add_adjacent(const std::shared_ptr<Triangle>& adjacent) {adjacentTriangles_.push_back(adjacent);}
 
-    void set_adjacent(int index, const std::shared_ptr<Triangle>& adjacent) {adjacentTriangles_[index] = adjacent;}
+    void set_adjacent(int index, const std::shared_ptr<Triangle>& adjacent);
 
     std::vector<std::shared_ptr<Triangle>> get_all_adjacents() {return adjacentTriangles_;}
 
