@@ -28,7 +28,7 @@ namespace triangulation {
 
     bool have_common_edge(const std::shared_ptr<Triangle>& t1, const std::shared_ptr<Triangle>& t2);
 
-    bool check_delauney_condition(const std::shared_ptr<Triangle>& new_tri, const std::shared_ptr<Triangle>& adjacent, const std::vector<Point>& points);
+    bool check_delauney_condition(const std::shared_ptr<Triangle>& tri, const std::shared_ptr<Triangle>& adj, const std::vector<Point>& points);
 
     int get_opposite_vertex(const std::shared_ptr<Triangle>& known_tri, const std::shared_ptr<Triangle>& unknown_tri); 
 

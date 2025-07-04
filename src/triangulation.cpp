@@ -233,32 +233,35 @@ bool triangulation::have_common_edge(const std::shared_ptr<Triangle>& t1, const 
 }
 
 
-bool triangulation::check_delauney_condition(const std::shared_ptr<Triangle>& new_tri, const std::shared_ptr<Triangle>& adjacent, const std::vector<Point>& points) {
-    int opp_index = get_opposite_vertex(new_tri, adjacent); // вершина, противоположная общему ребру
-    const Point& D = points[opp_index];
-
-    const Point& A = points[new_tri->get_point_index(0)];
-    const Point& B = points[new_tri->get_point_index(1)];
-    const Point& C = points[new_tri->get_point_index(2)];
-
-    // Определяем, лежит ли точка D внутри описанной окружности треугольника ABC
-    auto in_circle = [](const Point& A, const Point& B, const Point& C, const Point& D) -> bool {
-        double ax = A.get_x() - D.get_x();
-        double ay = A.get_y() - D.get_y();
-        double bx = B.get_x() - D.get_x();
-        double by = B.get_y() - D.get_y();
-        double cx = C.get_x() - D.get_x();
-        double cy = C.get_y() - D.get_y();
-
-        double det = (ax * ax + ay * ay) * (bx * cy - cx * by)
-            - (bx * bx + by * by) * (ax * cy - cx * ay)
-            + (cx * cx + cy * cy) * (ax * by - bx * ay);
-
-        return det > 0; // true, если D лежит внутри окружности ABC
-    };
-
-    // Если D внутри окружности ABC — условие Делоне нарушено
-    return !in_circle(A, B, C, D);
+//bool triangulation::check_delauney_condition(const std::shared_ptr<Triangle>& new_tri, const std::shared_ptr<Triangle>& adjacent, const std::vector<Point>& points) {
+//    int opp_index = get_opposite_vertex(new_tri, adjacent); // вершина, противоположная общему ребру
+//    const Point& D = points[opp_index];
+//
+//    const Point& A = points[new_tri->get_point_index(0)];
+//    const Point& B = points[new_tri->get_point_index(1)];
+//    const Point& C = points[new_tri->get_point_index(2)];
+//
+//    // Определяем, лежит ли точка D внутри описанной окружности треугольника ABC
+//    auto in_circle = [](const Point& A, const Point& B, const Point& C, const Point& D) -> bool {
+//        double ax = A.get_x() - D.get_x();
+//        double ay = A.get_y() - D.get_y();
+//        double bx = B.get_x() - D.get_x();
+//        double by = B.get_y() - D.get_y();
+//        double cx = C.get_x() - D.get_x();
+//        double cy = C.get_y() - D.get_y();
+//
+//        double det = (ax * ax + ay * ay) * (bx * cy - cx * by)
+//            - (bx * bx + by * by) * (ax * cy - cx * ay)
+//            + (cx * cx + cy * cy) * (ax * by - bx * ay);
+//
+//        double orient = (B.get_x() - A.get_x()) * (C.get_y() - A.get_y())
+//            - (B.get_y() - A.get_y()) * (C.get_x() - A.get_x());
+//
+//        return ( det * orient ) > 0; // true, если D лежит внутри окружности ABC
+//    };
+//
+//    // Если D внутри окружности ABC — условие Делоне нарушено
+//    return !in_circle(A, B, C, D);
 
    // const Point& v2 = points[get_opposite_vertex(new_tri, adjacent)]; // opposite vertex os adjacent
    // const Point& v0 = points[new_tri->get_point_index(0)]; // vertex of new triangle
@@ -305,6 +308,88 @@ bool triangulation::check_delauney_condition(const std::shared_ptr<Triangle>& ne
    // } else {
    //     return false;
    // }
+//}
+
+bool triangulation::check_delauney_condition(
+    const std::shared_ptr<Triangle>& tri,
+    const std::shared_ptr<Triangle>& adj,
+    const std::vector<Point>& points) {
+
+    // Находим общее ребро
+    auto tri_edges = tri->get_edges();
+    auto adj_edges = adj->get_edges();
+
+    std::vector<std::pair<int, int>> common_edges;
+    for (const auto& edge : tri_edges) {
+        if (adj_edges.find(edge) != adj_edges.end()) {
+            common_edges.push_back(edge);
+        }
+    }
+
+    if (common_edges.empty()) {
+        std::cerr << "Ошибка: нет общего ребра между треугольниками." << std::endl;
+        return true;
+    }
+
+    // Общее ребро
+    auto common_edge = common_edges[0];
+    int v0 = common_edge.first;
+    int v1 = common_edge.second;
+
+    // Найдём третью точку в каждом треугольнике (не входящую в ребро)
+    std::array<int, 3> tri_indices = tri->get_points_indexes();
+    int idx_A = -1, idx_B = -1, idx_C = -1;
+
+    for (int i : tri_indices) {
+        if (i != v0 && i != v1) {
+            idx_C = i; // Точка, противоположная ребру в первом треугольнике
+        }
+    }
+
+    std::array<int, 3> adj_indices = adj->get_points_indexes();
+    int idx_D = -1;
+    for (int i : adj_indices) {
+        if (i != v0 && i != v1) {
+            idx_D = i; // Точка, противоположная ребру во втором треугольнике
+        }
+    }
+
+    if (idx_C == -1 || idx_D == -1) {
+        std::cerr << "Ошибка: не удалось найти противоположные вершины." << std::endl;
+        return true;
+    }
+
+    const Point& A = points[v0];
+    const Point& B = points[v1];
+    const Point& C = points[idx_C]; // Третья точка первого треугольника
+    const Point& D = points[idx_D]; // Третья точка второго треугольника
+
+    // Проверяем, лежит ли D внутри окружности ABC
+    auto in_circle = [](const Point& A, const Point& B, const Point& C, const Point& D) -> bool {
+        double ax = A.get_x() - D.get_x();
+        double ay = A.get_y() - D.get_y();
+        double bx = B.get_x() - D.get_x();
+        double by = B.get_y() - D.get_y();
+        double cx = C.get_x() - D.get_x();
+        double cy = C.get_y() - D.get_y();
+
+        double det = (ax * ax + ay * ay) * (bx * cy - cx * by)
+            - (bx * bx + by * by) * (ax * cy - cx * ay)
+            + (cx * cx + cy * cy) * (ax * by - bx * ay);
+
+        double orient = (B.get_x() - A.get_x()) * (C.get_y() - A.get_y())
+            - (B.get_y() - A.get_y()) * (C.get_x() - A.get_x());
+
+        return (det * orient) > 0;
+    };
+
+    std::cout << "A(" << A.get_x() << ", " << A.get_y() << ")\n"
+        << "B(" << B.get_x() << ", " << B.get_y() << ")\n"
+        << "C(" << C.get_x() << ", " << C.get_y() << ")\n"
+        << "D(" << D.get_x() << ", " << D.get_y() << ")\n";
+
+
+    return !in_circle(A, B, C, D); // true — условие Делоне выполнено
 }
 
 void triangulation::swap_edge(std::shared_ptr<Triangle>& new_triangle, std::shared_ptr<Triangle>& adjacent, const std::vector<Point>& points) {
@@ -344,6 +429,17 @@ void triangulation::swap_edge(std::shared_ptr<Triangle>& new_triangle, std::shar
 
     set_new_adjacents(new_triangle, adjacent, all_adjacents, points);
     set_new_adjacents(adjacent, new_triangle, all_adjacents, points);
+
+    for (auto& adj : new_triangle->get_all_adjacents()) {
+        if (!check_delauney_condition(new_triangle, adj, points)) {
+            swap_edge(new_triangle, adj, points);
+        }
+    }
+    for (auto& adj : adjacent->get_all_adjacents()) {
+        if (!check_delauney_condition(adjacent, adj, points)) {
+            swap_edge(adjacent, adj, points);
+        }
+    }
 }
 
 void triangulation::set_new_adjacents(std::shared_ptr<Triangle>& triangle, std::shared_ptr<Triangle>& other_triangle, std::vector<std::shared_ptr<Triangle>>& adjacents, const std::vector<Point>& points) {
