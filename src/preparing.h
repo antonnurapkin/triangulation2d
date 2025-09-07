@@ -1,6 +1,7 @@
 #pragma once
 #include <unordered_map>
 #include <string>
+#include <memory>
 #include "structures.h"
 
 
@@ -10,7 +11,7 @@ namespace preparing {
 
     std::vector<Point> normalize_coords(const std::vector<std::array<double, 2>>& points, const std::unordered_map<std::string, double>& bounds);
 
-    Triangle create_super_triangle(std::vector<Point>& points);
+    std::shared_ptr<Triangle> create_super_triangle(std::vector<Point>& points);
 
     std::vector<int> bin_sort(std::vector<Point>& points, const std::unordered_map<std::string, double>& bounds);
 
