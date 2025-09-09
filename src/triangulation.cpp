@@ -1,3 +1,4 @@
+#include <spdlog/spdlog.h>
 #include <vector>
 #include <algorithm>
 #include <iostream>
@@ -33,11 +34,9 @@ triangulation::trianglesArrayLikeDataType triangulation::get_triangulation(std::
 
     // -3 means without super triangles's points
     for (int i = 0; i < normalized_points.size() - 3; i++) {
-        std::cout << normalized_points[i].get_x() << " " << normalized_points[i].get_y() << std::endl;
+        spdlog::debug("{}: {} {}", i, normalized_points[i].get_x(), normalized_points[i].get_y());
 
-        /*while (!is_inside_triangle(current_triangle, normalized_points[i], normalized_points)) {
-           current_triangle = find_triangle(normalized_points[i], current_triangle, normalized_points);
-        }*/
+        spdlog::debug("Поиск необходимого треугольника\n");
         for (const auto& tri : triangles) {
             if (is_inside_triangle(tri, normalized_points[i], normalized_points)) {
                 current_triangle = tri;
@@ -134,6 +133,7 @@ std::shared_ptr<Triangle> triangulation::find_triangle(const Point& point, const
 
 
 std::shared_ptr<Triangle> triangulation::add_new_triangles(int index, std::shared_ptr<Triangle>& parent_triangle, std::vector<std::shared_ptr<Triangle>>& triangles, const std::vector<Point>& points) {
+    spdlog::info("Добавление нового треугольника");
     std::shared_ptr<Triangle> tri_1 = std::make_shared<Triangle>(index, parent_triangle->get_point_index(0), parent_triangle->get_point_index(1));
     std::shared_ptr<Triangle> tri_2 = std::make_shared<Triangle>(index, parent_triangle->get_point_index(1), parent_triangle->get_point_index(2));
     std::shared_ptr<Triangle> tri_3 = std::make_shared<Triangle>(index, parent_triangle->get_point_index(2), parent_triangle->get_point_index(0));
@@ -156,7 +156,8 @@ std::shared_ptr<Triangle> triangulation::add_new_triangles(int index, std::share
     triangles.push_back(tri_1);
     triangles.push_back(tri_2);
     triangles.push_back(tri_3);   
-    
+
+    spdlog::debug("Удаление старого треугольника");
     triangles.erase(
         std::remove_if(
             triangles.begin(), 
@@ -171,6 +172,7 @@ std::shared_ptr<Triangle> triangulation::add_new_triangles(int index, std::share
 
 
 void triangulation::add_external_adjacent(std::shared_ptr<Triangle>& new_tri, std::shared_ptr<Triangle>& parent_tri, const std::vector<Point>& points) {
+    spdlog::debug("Добавление внешнего соседа");
     for (auto& adjacent : parent_tri->get_all_adjacents()) {
         std::vector<Point> vertices = {
                 points[adjacent->get_point_index(0)],
@@ -190,6 +192,7 @@ void triangulation::add_external_adjacent(std::shared_ptr<Triangle>& new_tri, st
 
 
 void triangulation::update_adjacent_neighbors(const std::shared_ptr<Triangle>& new_triangle, std::shared_ptr<Triangle>& parent_triangle, const Point& point_1, const Point& point_2, const std::vector<Point>& points){
+    spdlog::debug("Обновление соседей у треугольников, которые были созданы на предыдущих итерациях");
     // Данный метод добавляет i-ый новый треугольник в качестве соседа к какому-то соседу cтарого большого треугольника
     const auto& adjacents = parent_triangle->get_all_adjacents();
     
@@ -383,16 +386,17 @@ bool triangulation::check_delauney_condition(
         return (det * orient) > 0;
     };
 
-    std::cout << "A(" << A.get_x() << ", " << A.get_y() << ")\n"
-        << "B(" << B.get_x() << ", " << B.get_y() << ")\n"
-        << "C(" << C.get_x() << ", " << C.get_y() << ")\n"
-        << "D(" << D.get_x() << ", " << D.get_y() << ")\n";
+    // std::cout << "A(" << A.get_x() << ", " << A.get_y() << ")\n"
+    //     << "B(" << B.get_x() << ", " << B.get_y() << ")\n"
+    //     << "C(" << C.get_x() << ", " << C.get_y() << ")\n"
+    //     << "D(" << D.get_x() << ", " << D.get_y() << ")\n";
 
 
     return !in_circle(A, B, C, D); // true — условие Делоне выполнено
 }
 
 void triangulation::swap_edge(std::shared_ptr<Triangle>& new_triangle, std::shared_ptr<Triangle>& adjacent, const std::vector<Point>& points) {
+    spdlog::debug("Смена ребёр между соседними треугольниками");
     int v2_index = get_opposite_vertex(new_triangle, adjacent); // opposite vertex os adjacent
     int v0_index = new_triangle->get_point_index(0); // vertex of new triangle
     int v1_index = new_triangle->get_point_index(1);
@@ -431,18 +435,21 @@ void triangulation::swap_edge(std::shared_ptr<Triangle>& new_triangle, std::shar
     set_new_adjacents(adjacent, new_triangle, all_adjacents, points);
 
     for (auto& adj : new_triangle->get_all_adjacents()) {
-        if (!check_delauney_condition(new_triangle, adj, points)) {
+        spdlog::debug("Рекурсия");
+        if (!check_delauney_condition(new_triangle, adj, points) && adj != adjacent) {
             swap_edge(new_triangle, adj, points);
         }
     }
     for (auto& adj : adjacent->get_all_adjacents()) {
-        if (!check_delauney_condition(adjacent, adj, points)) {
+        spdlog::debug("Рекурсия");
+        if (!check_delauney_condition(adjacent, adj, points) && adj != new_triangle) {
             swap_edge(adjacent, adj, points);
         }
     }
 }
 
 void triangulation::set_new_adjacents(std::shared_ptr<Triangle>& triangle, std::shared_ptr<Triangle>& other_triangle, std::vector<std::shared_ptr<Triangle>>& adjacents, const std::vector<Point>& points) {
+    spdlog::debug("Установка новых соседей для треугольников, который сменили ребро");
     std::array<std::pair<int, int>, 2> edges = { {
             // {0, 1},  // beacause adjacent for edge with indexes [0, 1] was inserted when the triangle was created
             {0, 2},
