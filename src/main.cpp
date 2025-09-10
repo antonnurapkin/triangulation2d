@@ -15,10 +15,10 @@ int main() {
 
     // Создание вектора для 60 точек
     std::vector<std::array<double, 2>> points;
-    points.reserve(500); // Резервируем место для эффективности
+    points.reserve(10000); // Резервируем место для эффективности
 
     // Заполнение вектора 60 случайными точками
-    for (int i = 0; i < 300; ++i) {
+    for (int i = 0; i < 5000; ++i) {
         points.push_back({dis(gen), dis(gen)});
     }
 

@@ -1,5 +1,6 @@
 #include <spdlog/spdlog.h>
 #include <vector>
+#include <stack>
 #include <algorithm>
 #include <iostream>
 #include <memory>
@@ -146,12 +147,22 @@ std::shared_ptr<Triangle> triangulation::add_new_triangles(int index, std::share
 
     tri_3->add_adjacent(tri_2);
     tri_3->add_adjacent(tri_1);
+
+    std::stack<std::shared_ptr<Triangle>> stack;
+    stack.push(tri_1);
+    stack.push(tri_2);
+    stack.push(tri_3);
     
     if (parent_triangle->is_adjacents_exist()) {
         add_external_adjacent(tri_1, parent_triangle, points);
         add_external_adjacent(tri_2, parent_triangle, points);
         add_external_adjacent(tri_3, parent_triangle, points);
+        
     }
+
+    // if (!check_delauney_condition(new_tri, adjacent, points)) {
+    //     swap_edge(new_tri, adjacent, points);
+    // }
 
     triangles.push_back(tri_1);
     triangles.push_back(tri_2);
@@ -170,6 +181,23 @@ std::shared_ptr<Triangle> triangulation::add_new_triangles(int index, std::share
     return tri_1;
 }
 
+void triangulation::update_trinagulation(std::stack<std::shared_ptr<Triangle>> stack, const std::vector<Point>& points) {
+    while(stack.size() > 0) {
+        std::shared_ptr<Triangle> new_tri = stack.top();
+        bool is_swaped = false;
+        for (auto& adjacent: new_tri->get_all_adjacents()) {
+            if (!check_delauney_condition(new_tri, adjacent, points)) {
+                swap_edge(new_tri, adjacent, points);
+                stack.push(adjacent);
+                is_swaped = true;
+            }
+        }
+        if (!is_swaped) {
+            stack.pop();
+        }
+    }
+}
+
 
 void triangulation::add_external_adjacent(std::shared_ptr<Triangle>& new_tri, std::shared_ptr<Triangle>& parent_tri, const std::vector<Point>& points) {
     spdlog::debug("Добавление внешнего соседа");
@@ -182,10 +210,6 @@ void triangulation::add_external_adjacent(std::shared_ptr<Triangle>& new_tri, st
         if (have_common_edge(vertices, points[new_tri->get_point_index(1)], points[new_tri->get_point_index(2)])) {
             new_tri->add_adjacent(adjacent);
             update_adjacent_neighbors(new_tri, parent_tri, points[new_tri->get_point_index(1)], points[new_tri->get_point_index(2)], points);
-
-            if (!check_delauney_condition(new_tri, adjacent, points)) {
-                swap_edge(new_tri, adjacent, points);
-            }
         }
     }
 }
