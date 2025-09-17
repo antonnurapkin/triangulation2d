@@ -1,5 +1,7 @@
 #include <vector>
 #include <iostream>
+#include <fstream>
+#include <iomanip>
 #include "utils.h"
 #include "structures.h"
 
@@ -57,4 +59,25 @@ Point utils::get_centroid(const std::shared_ptr<Triangle>& triangle, const std::
     ) / 3;
 
     return Point(x_c, y_c);
+}
+
+void utils::save_to_file(std::vector<std::array<std::array<double, 2>, 3>> triangles, const std::string filename) {
+    std::ofstream file(filename);
+    file << std::fixed << std::setprecision(6);
+
+    if (file.is_open()) {
+        for (const auto& triangle : triangles) {
+            for (int i = 0; i < 3; ++i) {
+                file << triangle[i][0]; // x координата
+                file << ",";
+                file << triangle[i][1]; // y координата
+                if (i < 2) file << ","; // Добавляем запятую между точками, но не в конце строки
+            }
+            file << "\n"; // Новая строка после каждого треугольника
+        }
+        file.close();
+    }
+    else {
+        throw std::runtime_error("Error: Could not create or open file");
+    }
 }

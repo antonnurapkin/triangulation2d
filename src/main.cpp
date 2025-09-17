@@ -3,17 +3,20 @@
 #include <iostream>
 #include <random>
 #include "triangulation.h"
-#include "plot.h"
-
+#include "utils.h"
+#include <cstdlib>
 
 int main(int args, char** argv) {
+
+    
+
     spdlog::set_level(spdlog::level::info);
     
     // Настройка генератора случайных чисел
     double lower_bound = -10;
     double upper_bound = 10;
-    std::random_device rd;  // Источник энтропии
-    std::mt19937 gen(rd()); // Mersenne Twister генератор
+    std::random_device rd;
+    std::mt19937 gen(rd());
     std::uniform_real_distribution<double> dis(lower_bound, upper_bound); // Диапазон значений
 
     // Создание вектора для 60 точек
@@ -27,17 +30,9 @@ int main(int args, char** argv) {
 
     std::vector<std::array<std::array<double, 2>, 3>> result = triangulation::get_triangulation(points);
 
-    // for (const auto& tri : result) {
-    //     for (const auto& point : tri) {
-    //         if (-10 < point[0] < 10 && -10 < point[1] < 10) {
-    //             std::cout << "( " << point[0] << ", " << point[1] << " ), ";
-    //         }
-    //     }
-    //     std::cout << std::endl;
-    // }
+    utils::save_to_file(result);
 
-    plot::draw(result, lower_bound, upper_bound);
-
+    std::system("python3 hello.py");
 
     return 0;
 }
