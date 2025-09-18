@@ -8,8 +8,6 @@
 
 int main(int args, char** argv) {
 
-    
-
     spdlog::set_level(spdlog::level::info);
     
     // Настройка генератора случайных чисел

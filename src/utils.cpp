@@ -65,6 +65,8 @@ void utils::save_to_file(std::vector<std::array<std::array<double, 2>, 3>> trian
     std::ofstream file(filename);
     file << std::fixed << std::setprecision(6);
 
+    file << "x1,y1,x2,y2,x3,y3\n";
+
     if (file.is_open()) {
         for (const auto& triangle : triangles) {
             for (int i = 0; i < 3; ++i) {
