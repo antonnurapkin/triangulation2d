@@ -38,7 +38,7 @@ triangulation::trianglesArrayLikeDataType triangulation::get_triangulation(std::
         spdlog::debug("{}: {} {}", i, normalized_points[i].get_x(), normalized_points[i].get_y());
 
         spdlog::debug("Поиск необходимого треугольника\n");
-        for (const auto& tri : triangles) {
+        for (const auto& tri : triangles) { // Сделать поиск по треугольникам, а не перебор
             if (is_inside_triangle(tri, normalized_points[i], normalized_points)) {
                 current_triangle = tri;
             }
@@ -163,6 +163,8 @@ std::shared_ptr<Triangle> triangulation::add_new_triangles(int index, std::share
     // if (!check_delauney_condition(new_tri, adjacent, points)) {
     //     swap_edge(new_tri, adjacent, points);
     // }
+
+    update_trinagulation(stack, points);
 
     triangles.push_back(tri_1);
     triangles.push_back(tri_2);
