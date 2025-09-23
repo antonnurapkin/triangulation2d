@@ -185,6 +185,7 @@ std::shared_ptr<Triangle> triangulation::add_new_triangles(int index, std::share
 
 void triangulation::update_trinagulation(std::stack<std::shared_ptr<Triangle>> stack, const std::vector<Point>& points) {
     while(stack.size() > 0) {
+        spdlog::info("Размер стэка: {}", stack.size());
         std::shared_ptr<Triangle> new_tri = stack.top();
         bool is_swaped = false;
         for (auto& adjacent: new_tri->get_all_adjacents()) {
@@ -460,18 +461,18 @@ void triangulation::swap_edge(std::shared_ptr<Triangle>& new_triangle, std::shar
     set_new_adjacents(new_triangle, adjacent, all_adjacents, points);
     set_new_adjacents(adjacent, new_triangle, all_adjacents, points);
 
-    for (auto& adj : new_triangle->get_all_adjacents()) {
-        spdlog::debug("Рекурсия");
-        if (!check_delauney_condition(new_triangle, adj, points) && adj != adjacent) {
-            swap_edge(new_triangle, adj, points);
-        }
-    }
-    for (auto& adj : adjacent->get_all_adjacents()) {
-        spdlog::debug("Рекурсия");
-        if (!check_delauney_condition(adjacent, adj, points) && adj != new_triangle) {
-            swap_edge(adjacent, adj, points);
-        }
-    }
+    // for (auto& adj : new_triangle->get_all_adjacents()) {
+    //     spdlog::debug("Рекурсия");
+    //     if (!check_delauney_condition(new_triangle, adj, points) && adj != adjacent) {
+    //         swap_edge(new_triangle, adj, points);
+    //     }
+    // }
+    // for (auto& adj : adjacent->get_all_adjacents()) {
+    //     spdlog::debug("Рекурсия");
+    //     if (!check_delauney_condition(adjacent, adj, points) && adj != new_triangle) {
+    //         swap_edge(adjacent, adj, points);
+    //     }
+    // }
 }
 
 void triangulation::set_new_adjacents(std::shared_ptr<Triangle>& triangle, std::shared_ptr<Triangle>& other_triangle, std::vector<std::shared_ptr<Triangle>>& adjacents, const std::vector<Point>& points) {
