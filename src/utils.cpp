@@ -2,6 +2,7 @@
 #include <iostream>
 #include <fstream>
 #include <iomanip>
+#include <spdlog/spdlog.h>
 #include "utils.h"
 #include "structures.h"
 
@@ -65,11 +66,14 @@ void utils::save_to_file(std::vector<std::array<std::array<double, 2>, 3>> trian
     std::ofstream file(filename);
     file << std::fixed << std::setprecision(6);
 
+    spdlog::info("Запись в файл");
+    
     file << "x1,y1,x2,y2,x3,y3\n";
 
     if (file.is_open()) {
         for (const auto& triangle : triangles) {
             for (int i = 0; i < 3; ++i) {
+                std::cout << triangle[i][0] << ", " << triangle[i][1] << std::endl;
                 file << triangle[i][0]; // x координата
                 file << ",";
                 file << triangle[i][1]; // y координата

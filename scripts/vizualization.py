@@ -23,6 +23,6 @@ fig = go.Figure()
 
 triangles = np.array(triangles)
 for tri_points in triangles:
-    fig.add_trace(go.Scatter(x=tri_points[:,0], y=tri_points[:,1], mode='lines', marker=dict(color='blue')))
+    fig.add_trace(go.Scatter(x=tri_points[:,0], y=tri_points[:,1], mode='lines + markers', marker=dict(color='blue')))
 
 fig.show()

@@ -8,9 +8,9 @@
 
 int main(int args, char** argv) {
 
-    spdlog::set_level(spdlog::level::info);
+    spdlog::set_level(spdlog::level::debug);
     
-    // Настройка генератора случайных чисел
+    // // Настройка генератора случайных чисел
     double lower_bound = -10;
     double upper_bound = 10;
     std::random_device rd;
@@ -18,11 +18,18 @@ int main(int args, char** argv) {
     std::uniform_real_distribution<double> dis(lower_bound, upper_bound); // Диапазон значений
 
     // Создание вектора для 60 точек
+    // std::vector<std::array<double, 2>> points = {
+    //     {{1,1}},
+    //     {{2,1}},
+    //     {{2,2}},
+    //     {{1,3}},
+    //     {{1.5, 1}}
+    // };
     std::vector<std::array<double, 2>> points;
-    points.reserve(40); // Резервируем место для эффективности
+    points.reserve(200); // Резервируем место для эффективности
 
     // Заполнение вектора 60 случайными точками
-    for (int i = 0; i < 30; ++i) {
+    for (int i = 0; i < 200; ++i) {
         points.push_back({dis(gen), dis(gen)});
     }
 

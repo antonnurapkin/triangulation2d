@@ -160,10 +160,6 @@ std::shared_ptr<Triangle> triangulation::add_new_triangles(int index, std::share
         
     }
 
-    // if (!check_delauney_condition(new_tri, adjacent, points)) {
-    //     swap_edge(new_tri, adjacent, points);
-    // }
-
     update_trinagulation(stack, points);
 
     triangles.push_back(tri_1);
@@ -183,9 +179,10 @@ std::shared_ptr<Triangle> triangulation::add_new_triangles(int index, std::share
     return tri_1;
 }
 
-void triangulation::update_trinagulation(std::stack<std::shared_ptr<Triangle>> stack, const std::vector<Point>& points) {
-    while(stack.size() > 0) {
-        spdlog::info("Размер стэка: {}", stack.size());
+void triangulation::update_trinagulation(std::stack<std::shared_ptr<Triangle>>& stack, const std::vector<Point>& points) {
+    while(!stack.empty()) {
+        spdlog::debug("Размер стэка: {}", stack.size());
+
         std::shared_ptr<Triangle> new_tri = stack.top();
         bool is_swaped = false;
         for (auto& adjacent: new_tri->get_all_adjacents()) {
@@ -198,7 +195,12 @@ void triangulation::update_trinagulation(std::stack<std::shared_ptr<Triangle>> s
         if (!is_swaped) {
             stack.pop();
         }
+        
+        if (stack.size() > points.size() * 10) {
+            throw std::runtime_error("Размер стека превышен");
+        }
     }
+    spdlog::debug("Триунгуляция обновлена");
 }
 
 
@@ -357,7 +359,7 @@ bool triangulation::check_delauney_condition(
     }
 
     if (common_edges.empty()) {
-        std::cerr << "Ошибка: нет общего ребра между треугольниками." << std::endl;
+        spdlog::debug("Нет общего ребра между треугольниками");
         return true;
     }
 
@@ -385,7 +387,7 @@ bool triangulation::check_delauney_condition(
     }
 
     if (idx_C == -1 || idx_D == -1) {
-        std::cerr << "Ошибка: не удалось найти противоположные вершины." << std::endl;
+        spdlog::debug("Не удалось найти противоположные вершины");
         return true;
     }
 
@@ -429,16 +431,40 @@ void triangulation::swap_edge(std::shared_ptr<Triangle>& new_triangle, std::shar
     int v1_index = new_triangle->get_point_index(1);
     int v3_index = new_triangle->get_point_index(2);
 
+    spdlog::debug("v2: {}, v0: {}, v1: {}, v3: {}", v2_index, v0_index, v1_index, v3_index);
+
     // This vector will be used as set of all adjacents of the resulting quadrilateral
     std::vector <std::shared_ptr<Triangle>> all_adjacents;
 
+    spdlog::debug("new_triangle: ");
+    for (auto& index : new_triangle->get_points_indexes()) {
+            std::cout << index << " ";
+        }
+    std::cout << std::endl;
+
+    spdlog::debug("Первый цикл");
     for (const auto& adj : new_triangle->get_all_adjacents()) {
+        for (auto& index : adj->get_points_indexes()) {
+            std::cout << index << " ";
+        }
+        std::cout << std::endl;
         if (adj != adjacent) {
             all_adjacents.push_back(adj);
         }
     }
 
+    spdlog::debug("adjacent: ");
+    for (auto& index : adjacent->get_points_indexes()) {
+            std::cout << index << " ";
+        }
+    std::cout << std::endl;
+    
+    spdlog::debug("Второй цикл");
     for (const auto& adj : adjacent->get_all_adjacents()) {
+        for (auto& index : adj->get_points_indexes()) {
+            std::cout << index << " ";
+        }
+        std::cout << std::endl;
         if (adj != new_triangle) {
             all_adjacents.push_back(adj);
         }
@@ -460,23 +486,10 @@ void triangulation::swap_edge(std::shared_ptr<Triangle>& new_triangle, std::shar
 
     set_new_adjacents(new_triangle, adjacent, all_adjacents, points);
     set_new_adjacents(adjacent, new_triangle, all_adjacents, points);
-
-    // for (auto& adj : new_triangle->get_all_adjacents()) {
-    //     spdlog::debug("Рекурсия");
-    //     if (!check_delauney_condition(new_triangle, adj, points) && adj != adjacent) {
-    //         swap_edge(new_triangle, adj, points);
-    //     }
-    // }
-    // for (auto& adj : adjacent->get_all_adjacents()) {
-    //     spdlog::debug("Рекурсия");
-    //     if (!check_delauney_condition(adjacent, adj, points) && adj != new_triangle) {
-    //         swap_edge(adjacent, adj, points);
-    //     }
-    // }
 }
 
 void triangulation::set_new_adjacents(std::shared_ptr<Triangle>& triangle, std::shared_ptr<Triangle>& other_triangle, std::vector<std::shared_ptr<Triangle>>& adjacents, const std::vector<Point>& points) {
-    spdlog::debug("Установка новых соседей для треугольников, который сменили ребро");
+    spdlog::debug("set_new_adjacents() - Установка новых соседей для треугольников, который сменили ребро");
     std::array<std::pair<int, int>, 2> edges = { {
             // {0, 1},  // beacause adjacent for edge with indexes [0, 1] was inserted when the triangle was created
             {0, 2},
@@ -485,21 +498,23 @@ void triangulation::set_new_adjacents(std::shared_ptr<Triangle>& triangle, std::
 
     for (const auto& edge : edges) {
         for (auto& adjacent : adjacents) {
-            std::vector<Point> vertices = {
-                points[adjacent->get_point_index(0)],
-                points[adjacent->get_point_index(1)],
-                points[adjacent->get_point_index(2)],
-                };
+            // std::vector<Point> vertices = {
+            //     points[adjacent->get_point_index(0)],
+            //     points[adjacent->get_point_index(1)],
+            //     points[adjacent->get_point_index(2)],
+            //     };
 
-            if (have_common_edge(vertices, points[triangle->get_point_index(edge.first)], points[triangle->get_point_index(edge.second)])) {
+            if (have_common_edge(triangle, adjacent)) {
                 triangle->add_adjacent(adjacent);
 
                 int index = adjacent->get_index_of_adjacent(triangle);
+                spdlog::debug("Индекс соседа: {}", index);
                 // TODO: Где-то здесь происходит добавление лишнего треугольника
 
                 if (index == -1) { // this means what this adjacent has not triangle as neighbor
                     index = adjacent->get_index_of_adjacent(other_triangle);
                 }
+                spdlog::debug("Индекс соседа после обработки: {}", index);
                 adjacent->set_adjacent(index, triangle); // TODO: set new adj to old adjacent's place
             }
         }

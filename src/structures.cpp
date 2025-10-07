@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <stdexcept>
 #include "structures.h"
 
 
@@ -35,6 +36,18 @@ Triangle::Triangle(Triangle&& moved) {
     moved.indexes_.fill(0);
 }
 
+void Triangle::add_adjacent(const std::shared_ptr<Triangle>& adjacent) {
+    if ((this->get_points_indexes() == adjacent->get_points_indexes())) {
+        throw std::runtime_error("Попытка добавить себя же в качестве соседа");
+    }
+
+    adjacentTriangles_.push_back(adjacent);
+
+    if (adjacentTriangles_.size() > 3) {
+        throw std::runtime_error("Превышено колиичество возможных соседей для треугольника");
+    }
+}
+
 std::set<std::pair<int, int>> Triangle::get_edges() const {
     std::set<std::pair<int, int>> result;
     for (int i = 0; i < 3; ++i) {
@@ -55,6 +68,10 @@ int Triangle::get_index_of_adjacent(std::shared_ptr<Triangle> adj) {
 }
 
 void Triangle::set_adjacent(int index, const std::shared_ptr<Triangle>& adjacent) {
+    if (this->get_points_indexes() == adjacent->get_points_indexes()) {
+        throw std::runtime_error("Попытка добавить себя же в качестве соседа");
+    }
+
     if (index < 3 && std::find(adjacentTriangles_.begin(), adjacentTriangles_.end(), adjacent) == adjacentTriangles_.end()) {
         adjacentTriangles_[index] = adjacent;
     }
