@@ -14,4 +14,8 @@ namespace utils {
     std::vector<double> cross_product_with_normal(const std::vector<double>& vec);
 
     Point get_centroid(const std::shared_ptr<Triangle>& triangle, const std::vector<Point>& points); // Центр треугольника
+
+    void save_to_file(const std::vector<std::array<std::array<double, 2>, 3>>& triangles, const std::string& filename = "triangles.csv");
+
+    void run_vizualization();
 } // namespace utils

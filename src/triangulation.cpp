@@ -1,4 +1,6 @@
+#include <spdlog/spdlog.h>
 #include <vector>
+#include <stack>
 #include <algorithm>
 #include <iostream>
 #include <memory>
@@ -33,12 +35,10 @@ triangulation::trianglesArrayLikeDataType triangulation::get_triangulation(std::
 
     // -3 means without super triangles's points
     for (int i = 0; i < normalized_points.size() - 3; i++) {
-        std::cout << normalized_points[i].get_x() << " " << normalized_points[i].get_y() << std::endl;
+        spdlog::debug("{}: {} {}", i, normalized_points[i].get_x(), normalized_points[i].get_y());
 
-        /*while (!is_inside_triangle(current_triangle, normalized_points[i], normalized_points)) {
-           current_triangle = find_triangle(normalized_points[i], current_triangle, normalized_points);
-        }*/
-        for (const auto& tri : triangles) {
+        spdlog::debug("Поиск необходимого треугольника\n");
+        for (const auto& tri : triangles) { // Сделать поиск по треугольникам, а не перебор
             if (is_inside_triangle(tri, normalized_points[i], normalized_points)) {
                 current_triangle = tri;
             }
@@ -52,42 +52,36 @@ triangulation::trianglesArrayLikeDataType triangulation::get_triangulation(std::
     return convert_to_array_like(triangles, normalized_points, bounds);
 }
 
-// TODO: Доступ через указатель
 bool triangulation::is_inside_triangle(const std::shared_ptr<Triangle>& triangle, const Point& point, const std::vector<Point>& points) {
-
+    
     const Point& A = points[triangle->get_points_indexes()[0]];
     const Point& B = points[triangle->get_points_indexes()[1]];
     const Point& C = points[triangle->get_points_indexes()[2]];
 
-    auto calculate_area = [](const Point& p1, const Point& p2, const Point& p3) -> double {
-        return 0.5 * std::abs(
-            p1.get_x() * (p2.get_y() - p3.get_y()) +
-            p2.get_x() * (p3.get_y() - p1.get_y()) +
-            p3.get_x() * (p1.get_y() - p2.get_y())
-        );
+    // Функция для вычисления ориентированной площади
+    auto cross_product = [](const Point& p1, const Point& p2, const Point& p3) -> double {
+        return (p2.get_x() - p1.get_x()) * (p3.get_y() - p1.get_y()) - 
+               (p2.get_y() - p1.get_y()) * (p3.get_x() - p1.get_x());
     };
 
-    double S_ABC = calculate_area(A, B, C);
+    // Вычисляем ориентированные площади для трех подтреугольников
+    double area1 = cross_product(point, A, B);
+    double area2 = cross_product(point, B, C);
+    double area3 = cross_product(point, C, A);
 
-    double S_PAB = calculate_area(point, A, B);
-    double S_PBC = calculate_area(point, B, C);
-    double S_PCA = calculate_area(point, C, A);
+    // Проверяем знаки площадей
+    bool has_negative = (area1 < 0) || (area2 < 0) || (area3 < 0);
+    bool has_positive = (area1 > 0) || (area2 > 0) || (area3 > 0);
 
-    double S_total = S_PAB + S_PBC + S_PCA;
-
-    double tolerance = 0.0001;
-
-    if (std::abs(S_total - S_ABC) < tolerance) {
-        return true;
+    double tolerance = 1e-10;
+    
+    // Если все площади имеют одинаковый знак (с учетом tolerance) - точка внутри
+    // Если одна из площадей близка к нулю - точка на границе
+    if (std::abs(area1) < tolerance || std::abs(area2) < tolerance || std::abs(area3) < tolerance) {
+        return true; // Точка на границе
     }
 
-    // // Если точка лежит на границе треугольника (одна из площадей равна нулю)
-    // if (S_PAB < tolerance || S_PBC < tolerance || S_PCA < tolerance) {
-    //     return true;
-    // }
-
-    // В остальных случаях точка лежит снаружи
-    return false;
+    return !(has_negative && has_positive); // Если есть и положительные и отрицательные - точка снаружи
 }
 
 // TODO: Доступ через указатель
@@ -134,6 +128,7 @@ std::shared_ptr<Triangle> triangulation::find_triangle(const Point& point, const
 
 
 std::shared_ptr<Triangle> triangulation::add_new_triangles(int index, std::shared_ptr<Triangle>& parent_triangle, std::vector<std::shared_ptr<Triangle>>& triangles, const std::vector<Point>& points) {
+    spdlog::info("Добавление нового треугольника");
     std::shared_ptr<Triangle> tri_1 = std::make_shared<Triangle>(index, parent_triangle->get_point_index(0), parent_triangle->get_point_index(1));
     std::shared_ptr<Triangle> tri_2 = std::make_shared<Triangle>(index, parent_triangle->get_point_index(1), parent_triangle->get_point_index(2));
     std::shared_ptr<Triangle> tri_3 = std::make_shared<Triangle>(index, parent_triangle->get_point_index(2), parent_triangle->get_point_index(0));
@@ -146,17 +141,26 @@ std::shared_ptr<Triangle> triangulation::add_new_triangles(int index, std::share
 
     tri_3->add_adjacent(tri_2);
     tri_3->add_adjacent(tri_1);
+
+    std::stack<std::shared_ptr<Triangle>> stack;
+    stack.push(tri_1);
+    stack.push(tri_2);
+    stack.push(tri_3);
     
     if (parent_triangle->is_adjacents_exist()) {
         add_external_adjacent(tri_1, parent_triangle, points);
         add_external_adjacent(tri_2, parent_triangle, points);
         add_external_adjacent(tri_3, parent_triangle, points);
+        
     }
+
+    update_trinagulation(stack, points);
 
     triangles.push_back(tri_1);
     triangles.push_back(tri_2);
     triangles.push_back(tri_3);   
-    
+
+    spdlog::debug("Удаление старого треугольника");
     triangles.erase(
         std::remove_if(
             triangles.begin(), 
@@ -169,8 +173,33 @@ std::shared_ptr<Triangle> triangulation::add_new_triangles(int index, std::share
     return tri_1;
 }
 
+void triangulation::update_trinagulation(std::stack<std::shared_ptr<Triangle>>& stack, const std::vector<Point>& points) {
+    while(!stack.empty()) {
+        spdlog::debug("Размер стэка: {}", stack.size());
+
+        std::shared_ptr<Triangle> new_tri = stack.top();
+        bool is_swaped = false;
+        for (auto& adjacent: new_tri->get_all_adjacents()) {
+            if (!check_delauney_condition(new_tri, adjacent, points)) {
+                swap_edge(new_tri, adjacent, points);
+                stack.push(adjacent);
+                is_swaped = true;
+            }
+        }
+        if (!is_swaped) {
+            stack.pop();
+        }
+        
+        if (stack.size() > points.size() * 10) {
+            throw std::runtime_error("Размер стека превышен");
+        }
+    }
+    spdlog::debug("Триунгуляция обновлена");
+}
+
 
 void triangulation::add_external_adjacent(std::shared_ptr<Triangle>& new_tri, std::shared_ptr<Triangle>& parent_tri, const std::vector<Point>& points) {
+    spdlog::debug("Добавление внешнего соседа");
     for (auto& adjacent : parent_tri->get_all_adjacents()) {
         std::vector<Point> vertices = {
                 points[adjacent->get_point_index(0)],
@@ -180,16 +209,13 @@ void triangulation::add_external_adjacent(std::shared_ptr<Triangle>& new_tri, st
         if (have_common_edge(vertices, points[new_tri->get_point_index(1)], points[new_tri->get_point_index(2)])) {
             new_tri->add_adjacent(adjacent);
             update_adjacent_neighbors(new_tri, parent_tri, points[new_tri->get_point_index(1)], points[new_tri->get_point_index(2)], points);
-
-            if (!check_delauney_condition(new_tri, adjacent, points)) {
-                swap_edge(new_tri, adjacent, points);
-            }
         }
     }
 }
 
 
 void triangulation::update_adjacent_neighbors(const std::shared_ptr<Triangle>& new_triangle, std::shared_ptr<Triangle>& parent_triangle, const Point& point_1, const Point& point_2, const std::vector<Point>& points){
+    spdlog::debug("Обновление соседей у треугольников, которые были созданы на предыдущих итерациях");
     // Данный метод добавляет i-ый новый треугольник в качестве соседа к какому-то соседу cтарого большого треугольника
     const auto& adjacents = parent_triangle->get_all_adjacents();
     
@@ -232,84 +258,6 @@ bool triangulation::have_common_edge(const std::shared_ptr<Triangle>& t1, const 
     return false;
 }
 
-
-//bool triangulation::check_delauney_condition(const std::shared_ptr<Triangle>& new_tri, const std::shared_ptr<Triangle>& adjacent, const std::vector<Point>& points) {
-//    int opp_index = get_opposite_vertex(new_tri, adjacent); // вершина, противоположная общему ребру
-//    const Point& D = points[opp_index];
-//
-//    const Point& A = points[new_tri->get_point_index(0)];
-//    const Point& B = points[new_tri->get_point_index(1)];
-//    const Point& C = points[new_tri->get_point_index(2)];
-//
-//    // Определяем, лежит ли точка D внутри описанной окружности треугольника ABC
-//    auto in_circle = [](const Point& A, const Point& B, const Point& C, const Point& D) -> bool {
-//        double ax = A.get_x() - D.get_x();
-//        double ay = A.get_y() - D.get_y();
-//        double bx = B.get_x() - D.get_x();
-//        double by = B.get_y() - D.get_y();
-//        double cx = C.get_x() - D.get_x();
-//        double cy = C.get_y() - D.get_y();
-//
-//        double det = (ax * ax + ay * ay) * (bx * cy - cx * by)
-//            - (bx * bx + by * by) * (ax * cy - cx * ay)
-//            + (cx * cx + cy * cy) * (ax * by - bx * ay);
-//
-//        double orient = (B.get_x() - A.get_x()) * (C.get_y() - A.get_y())
-//            - (B.get_y() - A.get_y()) * (C.get_x() - A.get_x());
-//
-//        return ( det * orient ) > 0; // true, если D лежит внутри окружности ABC
-//    };
-//
-//    // Если D внутри окружности ABC — условие Делоне нарушено
-//    return !in_circle(A, B, C, D);
-
-   // const Point& v2 = points[get_opposite_vertex(new_tri, adjacent)]; // opposite vertex os adjacent
-   // const Point& v0 = points[new_tri->get_point_index(0)]; // vertex of new triangle
-   // const Point& v1 = points[new_tri->get_point_index(1)];
-   // const Point& v3 = points[new_tri->get_point_index(2)];
-
-   // double cos_a = utils::dot_product(
-   //     utils::vector_by_points(v0, v1),
-   //     utils::vector_by_points(v0, v3)
-   // );
-
-   // double cos_b = utils::dot_product(
-   //     utils::vector_by_points(v2, v1),
-   //     utils::vector_by_points(v2, v3)
-   // );
-
-   // if (cos_a < 0 && cos_b < 0) {
-   //     return false;
-   // } else if (cos_a >= 0 && cos_b >= 0) {
-   //     return true;
-   // }
-   // 
-   //// double sin_a = (v0.get_x() - v1.get_x()) * (v0.get_y() - v3.get_y()) - (v0.get_y() - v1.get_y()) * (v0.get_x() - v3.get_x());
-   // //double sin_b = (v2.get_x() - v3.get_x()) * (v2.get_y() - v1.get_y()) - (v2.get_x() - v1.get_x()) * (v2.get_y() - v3.get_y());
-
-   // // Вычисление sin_a
-   // double numerator_a = (v0.get_x() - v1.get_x()) * (v0.get_y() - v3.get_y()) - (v0.get_y() - v1.get_y()) * (v0.get_x() - v3.get_x());
-   // double length_v0v1 = std::sqrt(std::pow(v0.get_x() - v1.get_x(), 2) + std::pow(v0.get_y() - v1.get_y(), 2));
-   // double length_v0v3 = std::sqrt(std::pow(v0.get_x() - v3.get_x(), 2) + std::pow(v0.get_y() - v3.get_y(), 2));
-   // double sin_a = numerator_a / (length_v0v1 * length_v0v3);
-
-   // // Вычисление sin_b
-
-   // double numerator_b = (v2.get_x() - v3.get_x()) * (v2.get_y() - v1.get_y()) - (v2.get_x() - v1.get_x()) * (v2.get_y() - v3.get_y());
-   // double length_v2v1 = std::sqrt(std::pow(v2.get_x() - v1.get_x(), 2) + std::pow(v2.get_y() - v1.get_y(), 2));
-   // double length_v2v3 = std::sqrt(std::pow(v2.get_x() - v3.get_x(), 2) + std::pow(v2.get_y() - v3.get_y(), 2));
-   // double sin_b = numerator_b / (length_v2v1 * length_v2v3);
-
-   // cos_b = (cos_b / (length_v2v1 * length_v2v3));
-   // cos_a = (cos_a / (length_v0v1 * length_v0v3));
-
-   // if (sin_a * cos_b  + cos_a * sin_b >= 0) {
-   //     return true;
-   // } else {
-   //     return false;
-   // }
-//}
-
 bool triangulation::check_delauney_condition(
     const std::shared_ptr<Triangle>& tri,
     const std::shared_ptr<Triangle>& adj,
@@ -327,7 +275,7 @@ bool triangulation::check_delauney_condition(
     }
 
     if (common_edges.empty()) {
-        std::cerr << "Ошибка: нет общего ребра между треугольниками." << std::endl;
+        spdlog::debug("Нет общего ребра между треугольниками");
         return true;
     }
 
@@ -355,7 +303,7 @@ bool triangulation::check_delauney_condition(
     }
 
     if (idx_C == -1 || idx_D == -1) {
-        std::cerr << "Ошибка: не удалось найти противоположные вершины." << std::endl;
+        spdlog::debug("Не удалось найти противоположные вершины");
         return true;
     }
 
@@ -383,20 +331,17 @@ bool triangulation::check_delauney_condition(
         return (det * orient) > 0;
     };
 
-    std::cout << "A(" << A.get_x() << ", " << A.get_y() << ")\n"
-        << "B(" << B.get_x() << ", " << B.get_y() << ")\n"
-        << "C(" << C.get_x() << ", " << C.get_y() << ")\n"
-        << "D(" << D.get_x() << ", " << D.get_y() << ")\n";
-
-
     return !in_circle(A, B, C, D); // true — условие Делоне выполнено
 }
 
 void triangulation::swap_edge(std::shared_ptr<Triangle>& new_triangle, std::shared_ptr<Triangle>& adjacent, const std::vector<Point>& points) {
+    spdlog::debug("Смена ребёр между соседними треугольниками");
     int v2_index = get_opposite_vertex(new_triangle, adjacent); // opposite vertex os adjacent
     int v0_index = new_triangle->get_point_index(0); // vertex of new triangle
     int v1_index = new_triangle->get_point_index(1);
     int v3_index = new_triangle->get_point_index(2);
+
+    spdlog::debug("v2: {}, v0: {}, v1: {}, v3: {}", v2_index, v0_index, v1_index, v3_index);
 
     // This vector will be used as set of all adjacents of the resulting quadrilateral
     std::vector <std::shared_ptr<Triangle>> all_adjacents;
@@ -406,7 +351,7 @@ void triangulation::swap_edge(std::shared_ptr<Triangle>& new_triangle, std::shar
             all_adjacents.push_back(adj);
         }
     }
-
+    
     for (const auto& adj : adjacent->get_all_adjacents()) {
         if (adj != new_triangle) {
             all_adjacents.push_back(adj);
@@ -420,56 +365,42 @@ void triangulation::swap_edge(std::shared_ptr<Triangle>& new_triangle, std::shar
     new_triangle->set_point_index(v0_index, 0);   // this line is unnecassary, but it reeds more clearly
     new_triangle->set_point_index(v2_index, 1);
     new_triangle->set_point_index(v1_index, 2);
-    new_triangle->add_adjacent(adjacent);
 
     adjacent->set_point_index(v0_index, 0);
     adjacent->set_point_index(v2_index, 1);
     adjacent->set_point_index(v3_index, 2);
+
+    new_triangle->add_adjacent(adjacent);
     adjacent->add_adjacent(new_triangle);
 
     set_new_adjacents(new_triangle, adjacent, all_adjacents, points);
     set_new_adjacents(adjacent, new_triangle, all_adjacents, points);
-
-    for (auto& adj : new_triangle->get_all_adjacents()) {
-        if (!check_delauney_condition(new_triangle, adj, points)) {
-            swap_edge(new_triangle, adj, points);
-        }
-    }
-    for (auto& adj : adjacent->get_all_adjacents()) {
-        if (!check_delauney_condition(adjacent, adj, points)) {
-            swap_edge(adjacent, adj, points);
-        }
-    }
 }
 
 void triangulation::set_new_adjacents(std::shared_ptr<Triangle>& triangle, std::shared_ptr<Triangle>& other_triangle, std::vector<std::shared_ptr<Triangle>>& adjacents, const std::vector<Point>& points) {
+    spdlog::debug("set_new_adjacents() - Установка новых соседей для треугольников, который сменили ребро");
     std::array<std::pair<int, int>, 2> edges = { {
             // {0, 1},  // beacause adjacent for edge with indexes [0, 1] was inserted when the triangle was created
             {0, 2},
             {1, 2}
         }};
 
-    for (const auto& edge : edges) {
-        for (auto& adjacent : adjacents) {
-            std::vector<Point> vertices = {
-                points[adjacent->get_point_index(0)],
-                points[adjacent->get_point_index(1)],
-                points[adjacent->get_point_index(2)],
-                };
 
-            if (have_common_edge(vertices, points[triangle->get_point_index(edge.first)], points[triangle->get_point_index(edge.second)])) {
-                triangle->add_adjacent(adjacent);
+    for (auto& adjacent : adjacents) {
+        if (have_common_edge(triangle, adjacent)) {
+            triangle->add_adjacent(adjacent);
 
-                int index = adjacent->get_index_of_adjacent(triangle);
-                // TODO: Где-то здесь происходит добавление лишнего треугольника
+            int index = adjacent->get_index_of_adjacent(triangle);
+            spdlog::debug("Индекс соседа: {}", index);
 
-                if (index == -1) { // this means what this adjacent has not triangle as neighbor
-                    index = adjacent->get_index_of_adjacent(other_triangle);
-                }
-                adjacent->set_adjacent(index, triangle); // TODO: set new adj to old adjacent's place
+            if (index == -1) { // this means what this adjacent has not triangle as neighbor
+                index = adjacent->get_index_of_adjacent(other_triangle);
             }
+            spdlog::debug("Индекс соседа после обработки: {}", index);
+            adjacent->set_adjacent(index, triangle); // TODO: set new adj to old adjacent's place
         }
     }
+
 }
 
 int triangulation::get_opposite_vertex(const std::shared_ptr<Triangle>& known_tri, const std::shared_ptr<Triangle>& unknown_tri) {
