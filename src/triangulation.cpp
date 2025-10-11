@@ -477,11 +477,12 @@ void triangulation::swap_edge(std::shared_ptr<Triangle>& new_triangle, std::shar
     new_triangle->set_point_index(v0_index, 0);   // this line is unnecassary, but it reeds more clearly
     new_triangle->set_point_index(v2_index, 1);
     new_triangle->set_point_index(v1_index, 2);
-    new_triangle->add_adjacent(adjacent);
 
     adjacent->set_point_index(v0_index, 0);
     adjacent->set_point_index(v2_index, 1);
     adjacent->set_point_index(v3_index, 2);
+
+    new_triangle->add_adjacent(adjacent);
     adjacent->add_adjacent(new_triangle);
 
     set_new_adjacents(new_triangle, adjacent, all_adjacents, points);
@@ -496,29 +497,28 @@ void triangulation::set_new_adjacents(std::shared_ptr<Triangle>& triangle, std::
             {1, 2}
         }};
 
-    for (const auto& edge : edges) {
-        for (auto& adjacent : adjacents) {
-            // std::vector<Point> vertices = {
-            //     points[adjacent->get_point_index(0)],
-            //     points[adjacent->get_point_index(1)],
-            //     points[adjacent->get_point_index(2)],
-            //     };
 
-            if (have_common_edge(triangle, adjacent)) {
-                triangle->add_adjacent(adjacent);
+    for (auto& adjacent : adjacents) {
+        // std::vector<Point> vertices = {
+        //     points[adjacent->get_point_index(0)],
+        //     points[adjacent->get_point_index(1)],
+        //     points[adjacent->get_point_index(2)],
+        //     };
 
-                int index = adjacent->get_index_of_adjacent(triangle);
-                spdlog::debug("Индекс соседа: {}", index);
-                // TODO: Где-то здесь происходит добавление лишнего треугольника
+        if (have_common_edge(triangle, adjacent)) {
+            triangle->add_adjacent(adjacent);
 
-                if (index == -1) { // this means what this adjacent has not triangle as neighbor
-                    index = adjacent->get_index_of_adjacent(other_triangle);
-                }
-                spdlog::debug("Индекс соседа после обработки: {}", index);
-                adjacent->set_adjacent(index, triangle); // TODO: set new adj to old adjacent's place
+            int index = adjacent->get_index_of_adjacent(triangle);
+            spdlog::debug("Индекс соседа: {}", index);
+
+            if (index == -1) { // this means what this adjacent has not triangle as neighbor
+                index = adjacent->get_index_of_adjacent(other_triangle);
             }
+            spdlog::debug("Индекс соседа после обработки: {}", index);
+            adjacent->set_adjacent(index, triangle); // TODO: set new adj to old adjacent's place
         }
     }
+
 }
 
 int triangulation::get_opposite_vertex(const std::shared_ptr<Triangle>& known_tri, const std::shared_ptr<Triangle>& unknown_tri) {
