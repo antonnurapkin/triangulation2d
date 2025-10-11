@@ -52,42 +52,36 @@ triangulation::trianglesArrayLikeDataType triangulation::get_triangulation(std::
     return convert_to_array_like(triangles, normalized_points, bounds);
 }
 
-// TODO: Доступ через указатель
 bool triangulation::is_inside_triangle(const std::shared_ptr<Triangle>& triangle, const Point& point, const std::vector<Point>& points) {
-
+    
     const Point& A = points[triangle->get_points_indexes()[0]];
     const Point& B = points[triangle->get_points_indexes()[1]];
     const Point& C = points[triangle->get_points_indexes()[2]];
 
-    auto calculate_area = [](const Point& p1, const Point& p2, const Point& p3) -> double {
-        return 0.5 * std::abs(
-            p1.get_x() * (p2.get_y() - p3.get_y()) +
-            p2.get_x() * (p3.get_y() - p1.get_y()) +
-            p3.get_x() * (p1.get_y() - p2.get_y())
-        );
+    // Функция для вычисления ориентированной площади
+    auto cross_product = [](const Point& p1, const Point& p2, const Point& p3) -> double {
+        return (p2.get_x() - p1.get_x()) * (p3.get_y() - p1.get_y()) - 
+               (p2.get_y() - p1.get_y()) * (p3.get_x() - p1.get_x());
     };
 
-    double S_ABC = calculate_area(A, B, C);
+    // Вычисляем ориентированные площади для трех подтреугольников
+    double area1 = cross_product(point, A, B);
+    double area2 = cross_product(point, B, C);
+    double area3 = cross_product(point, C, A);
 
-    double S_PAB = calculate_area(point, A, B);
-    double S_PBC = calculate_area(point, B, C);
-    double S_PCA = calculate_area(point, C, A);
+    // Проверяем знаки площадей
+    bool has_negative = (area1 < 0) || (area2 < 0) || (area3 < 0);
+    bool has_positive = (area1 > 0) || (area2 > 0) || (area3 > 0);
 
-    double S_total = S_PAB + S_PBC + S_PCA;
-
-    double tolerance = 0.0001;
-
-    if (std::abs(S_total - S_ABC) < tolerance) {
-        return true;
+    double tolerance = 1e-10;
+    
+    // Если все площади имеют одинаковый знак (с учетом tolerance) - точка внутри
+    // Если одна из площадей близка к нулю - точка на границе
+    if (std::abs(area1) < tolerance || std::abs(area2) < tolerance || std::abs(area3) < tolerance) {
+        return true; // Точка на границе
     }
 
-    // // Если точка лежит на границе треугольника (одна из площадей равна нулю)
-    // if (S_PAB < tolerance || S_PBC < tolerance || S_PCA < tolerance) {
-    //     return true;
-    // }
-
-    // В остальных случаях точка лежит снаружи
-    return false;
+    return !(has_negative && has_positive); // Если есть и положительные и отрицательные - точка снаружи
 }
 
 // TODO: Доступ через указатель
@@ -264,84 +258,6 @@ bool triangulation::have_common_edge(const std::shared_ptr<Triangle>& t1, const 
     return false;
 }
 
-
-//bool triangulation::check_delauney_condition(const std::shared_ptr<Triangle>& new_tri, const std::shared_ptr<Triangle>& adjacent, const std::vector<Point>& points) {
-//    int opp_index = get_opposite_vertex(new_tri, adjacent); // вершина, противоположная общему ребру
-//    const Point& D = points[opp_index];
-//
-//    const Point& A = points[new_tri->get_point_index(0)];
-//    const Point& B = points[new_tri->get_point_index(1)];
-//    const Point& C = points[new_tri->get_point_index(2)];
-//
-//    // Определяем, лежит ли точка D внутри описанной окружности треугольника ABC
-//    auto in_circle = [](const Point& A, const Point& B, const Point& C, const Point& D) -> bool {
-//        double ax = A.get_x() - D.get_x();
-//        double ay = A.get_y() - D.get_y();
-//        double bx = B.get_x() - D.get_x();
-//        double by = B.get_y() - D.get_y();
-//        double cx = C.get_x() - D.get_x();
-//        double cy = C.get_y() - D.get_y();
-//
-//        double det = (ax * ax + ay * ay) * (bx * cy - cx * by)
-//            - (bx * bx + by * by) * (ax * cy - cx * ay)
-//            + (cx * cx + cy * cy) * (ax * by - bx * ay);
-//
-//        double orient = (B.get_x() - A.get_x()) * (C.get_y() - A.get_y())
-//            - (B.get_y() - A.get_y()) * (C.get_x() - A.get_x());
-//
-//        return ( det * orient ) > 0; // true, если D лежит внутри окружности ABC
-//    };
-//
-//    // Если D внутри окружности ABC — условие Делоне нарушено
-//    return !in_circle(A, B, C, D);
-
-   // const Point& v2 = points[get_opposite_vertex(new_tri, adjacent)]; // opposite vertex os adjacent
-   // const Point& v0 = points[new_tri->get_point_index(0)]; // vertex of new triangle
-   // const Point& v1 = points[new_tri->get_point_index(1)];
-   // const Point& v3 = points[new_tri->get_point_index(2)];
-
-   // double cos_a = utils::dot_product(
-   //     utils::vector_by_points(v0, v1),
-   //     utils::vector_by_points(v0, v3)
-   // );
-
-   // double cos_b = utils::dot_product(
-   //     utils::vector_by_points(v2, v1),
-   //     utils::vector_by_points(v2, v3)
-   // );
-
-   // if (cos_a < 0 && cos_b < 0) {
-   //     return false;
-   // } else if (cos_a >= 0 && cos_b >= 0) {
-   //     return true;
-   // }
-   // 
-   //// double sin_a = (v0.get_x() - v1.get_x()) * (v0.get_y() - v3.get_y()) - (v0.get_y() - v1.get_y()) * (v0.get_x() - v3.get_x());
-   // //double sin_b = (v2.get_x() - v3.get_x()) * (v2.get_y() - v1.get_y()) - (v2.get_x() - v1.get_x()) * (v2.get_y() - v3.get_y());
-
-   // // Вычисление sin_a
-   // double numerator_a = (v0.get_x() - v1.get_x()) * (v0.get_y() - v3.get_y()) - (v0.get_y() - v1.get_y()) * (v0.get_x() - v3.get_x());
-   // double length_v0v1 = std::sqrt(std::pow(v0.get_x() - v1.get_x(), 2) + std::pow(v0.get_y() - v1.get_y(), 2));
-   // double length_v0v3 = std::sqrt(std::pow(v0.get_x() - v3.get_x(), 2) + std::pow(v0.get_y() - v3.get_y(), 2));
-   // double sin_a = numerator_a / (length_v0v1 * length_v0v3);
-
-   // // Вычисление sin_b
-
-   // double numerator_b = (v2.get_x() - v3.get_x()) * (v2.get_y() - v1.get_y()) - (v2.get_x() - v1.get_x()) * (v2.get_y() - v3.get_y());
-   // double length_v2v1 = std::sqrt(std::pow(v2.get_x() - v1.get_x(), 2) + std::pow(v2.get_y() - v1.get_y(), 2));
-   // double length_v2v3 = std::sqrt(std::pow(v2.get_x() - v3.get_x(), 2) + std::pow(v2.get_y() - v3.get_y(), 2));
-   // double sin_b = numerator_b / (length_v2v1 * length_v2v3);
-
-   // cos_b = (cos_b / (length_v2v1 * length_v2v3));
-   // cos_a = (cos_a / (length_v0v1 * length_v0v3));
-
-   // if (sin_a * cos_b  + cos_a * sin_b >= 0) {
-   //     return true;
-   // } else {
-   //     return false;
-   // }
-//}
-
 bool triangulation::check_delauney_condition(
     const std::shared_ptr<Triangle>& tri,
     const std::shared_ptr<Triangle>& adj,
@@ -415,12 +331,6 @@ bool triangulation::check_delauney_condition(
         return (det * orient) > 0;
     };
 
-    // std::cout << "A(" << A.get_x() << ", " << A.get_y() << ")\n"
-    //     << "B(" << B.get_x() << ", " << B.get_y() << ")\n"
-    //     << "C(" << C.get_x() << ", " << C.get_y() << ")\n"
-    //     << "D(" << D.get_x() << ", " << D.get_y() << ")\n";
-
-
     return !in_circle(A, B, C, D); // true — условие Делоне выполнено
 }
 
@@ -436,35 +346,13 @@ void triangulation::swap_edge(std::shared_ptr<Triangle>& new_triangle, std::shar
     // This vector will be used as set of all adjacents of the resulting quadrilateral
     std::vector <std::shared_ptr<Triangle>> all_adjacents;
 
-    spdlog::debug("new_triangle: ");
-    for (auto& index : new_triangle->get_points_indexes()) {
-            std::cout << index << " ";
-        }
-    std::cout << std::endl;
-
-    spdlog::debug("Первый цикл");
     for (const auto& adj : new_triangle->get_all_adjacents()) {
-        for (auto& index : adj->get_points_indexes()) {
-            std::cout << index << " ";
-        }
-        std::cout << std::endl;
         if (adj != adjacent) {
             all_adjacents.push_back(adj);
         }
     }
-
-    spdlog::debug("adjacent: ");
-    for (auto& index : adjacent->get_points_indexes()) {
-            std::cout << index << " ";
-        }
-    std::cout << std::endl;
     
-    spdlog::debug("Второй цикл");
     for (const auto& adj : adjacent->get_all_adjacents()) {
-        for (auto& index : adj->get_points_indexes()) {
-            std::cout << index << " ";
-        }
-        std::cout << std::endl;
         if (adj != new_triangle) {
             all_adjacents.push_back(adj);
         }
@@ -499,12 +387,6 @@ void triangulation::set_new_adjacents(std::shared_ptr<Triangle>& triangle, std::
 
 
     for (auto& adjacent : adjacents) {
-        // std::vector<Point> vertices = {
-        //     points[adjacent->get_point_index(0)],
-        //     points[adjacent->get_point_index(1)],
-        //     points[adjacent->get_point_index(2)],
-        //     };
-
         if (have_common_edge(triangle, adjacent)) {
             triangle->add_adjacent(adjacent);
 
