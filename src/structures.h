@@ -1,5 +1,6 @@
 #pragma once
 #include <vector>
+#include <iostream>
 #include <set>
 #include <array>
 #include <memory>
@@ -48,8 +49,8 @@ public:
     std::shared_ptr<Triangle> get_adjacent(int index) const {return adjacentTriangles_[index]; }
 
     int get_index_of_adjacent(std::shared_ptr<Triangle> adj);
-
-    void add_adjacent(const std::shared_ptr<Triangle>& adjacent) {adjacentTriangles_.push_back(adjacent);}
+    
+    void add_adjacent(const std::shared_ptr<Triangle>& adjacent);
 
     void set_adjacent(int index, const std::shared_ptr<Triangle>& adjacent);
 
@@ -57,6 +58,11 @@ public:
 
     void clear_adjacents() { adjacentTriangles_.clear(); }
     
+    void print_points_indexes() const {
+        std::cout << std::to_string(indexes_[0]) + " " + 
+                    std::to_string(indexes_[1]) + " " + 
+                    std::to_string(indexes_[2]) << std::endl;
+}
 private:
     std::array<int, 3> indexes_; 
     std::vector<std::shared_ptr<Triangle>> adjacentTriangles_;

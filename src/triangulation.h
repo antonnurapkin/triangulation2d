@@ -25,7 +25,7 @@ namespace triangulation {
 
     void update_adjacent_neighbors(const std::shared_ptr<Triangle>& new_triangle, std::shared_ptr<Triangle>& parent_triangle, const Point& point_1, const Point& point_2, const std::vector<Point>& points);
 
-    void update_trinagulation(std::stack<std::shared_ptr<Triangle>> stack, const std::vector<Point>& points);
+    void update_trinagulation(std::stack<std::shared_ptr<Triangle>>& stack, const std::vector<Point>& points);
 
     bool have_common_edge(const std::vector<Point>& triangle_points, const Point& p1, const Point& p2);
 

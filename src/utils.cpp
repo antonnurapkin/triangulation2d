@@ -2,6 +2,8 @@
 #include <iostream>
 #include <fstream>
 #include <iomanip>
+#include <filesystem>
+#include <spdlog/spdlog.h>
 #include "utils.h"
 #include "structures.h"
 
@@ -61,10 +63,12 @@ Point utils::get_centroid(const std::shared_ptr<Triangle>& triangle, const std::
     return Point(x_c, y_c);
 }
 
-void utils::save_to_file(std::vector<std::array<std::array<double, 2>, 3>> triangles, const std::string filename) {
+void utils::save_to_file(const std::vector<std::array<std::array<double, 2>, 3>>& triangles, const std::string& filename) {
     std::ofstream file(filename);
     file << std::fixed << std::setprecision(6);
 
+    spdlog::info("Запись в файл");
+    
     file << "x1,y1,x2,y2,x3,y3\n";
 
     if (file.is_open()) {
@@ -80,6 +84,13 @@ void utils::save_to_file(std::vector<std::array<std::array<double, 2>, 3>> trian
         file.close();
     }
     else {
+        file.close();
         throw std::runtime_error("Error: Could not create or open file");
     }
+}
+
+void utils::run_vizualization() {
+    std::filesystem::path path_to_script = std::filesystem::current_path() / "scripts" / "vizualization.py";
+
+    std::system((std::string("python3 ") + path_to_script.string()).c_str());
 }
