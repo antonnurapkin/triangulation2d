@@ -17,5 +17,12 @@ namespace utils {
 
     void save_to_file(const std::vector<std::array<std::array<double, 2>, 3>>& triangles, const std::string& filename = "triangles.csv");
 
+    std::vector<std::array<double, 2>> read_from_file(const std::string& filename);
+
     void run_vizualization();
+
+    std::array<double, 2> get_point(const std::string& s, const std::string& delimiter);
+
+    template<class T>
+    T check_launch_flag(int args, char** argv, const std::string& name, T& default_value);
 } // namespace utils

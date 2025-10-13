@@ -25,9 +25,6 @@ std::vector<double> utils::cross_product(const std::vector<double>& vec1, const 
 }
 
 std::vector<double> utils::cross_product_with_normal(const std::vector<double>& vec) {
-    // if (vec.size() != 3) {
-    //     throw std::runtime_error("Input vector must have 3 components.");
-    // }
     return std::vector<double> {
         vec[1],  // -v_y
         -vec[0],  // v_x
@@ -89,8 +86,57 @@ void utils::save_to_file(const std::vector<std::array<std::array<double, 2>, 3>>
     }
 }
 
+std::vector<std::array<double, 2>> utils::read_from_file(const std::string& filename) {
+    std::ifstream file(filename);
+
+    if (!file) {
+        throw std::runtime_error("Error: Could not create or open file");
+    }
+
+    std::vector<std::array<double, 2>> points;
+    
+    std::string line;
+
+    while(std::getline(file, line, '\n')) {
+        points.push_back(get_point(line, ","));
+    }
+
+    return points;
+}
+
 void utils::run_vizualization() {
     std::filesystem::path path_to_script = std::filesystem::current_path() / "scripts" / "vizualization.py";
 
     std::system((std::string("python3 ") + path_to_script.string()).c_str());
 }
+
+std::array<double, 2> utils::get_point(std::string& s, const std::string& delimiter) {
+    std::array<double, 2> coords;
+    size_t pos = 0;
+
+    pos = s.find(delimiter);
+    double x_coord = std::stod(s.substr(0, pos));
+    
+    s.erase(0, pos + delimiter.length());
+    double y_coord = std::stod(s);
+
+    coords[0] = x_coord;
+    coords[1] = y_coord;
+
+    return coords;
+}
+
+template<class T>
+T utils::check_launch_flag(int args, char** argv, const std::string& name, T& default_value) {
+    for (int i = 1; i < args; i++) {
+        if (argv[i] == name.c_str()) {
+            try {
+                T value = static_cast<T>(argv[i + 1])
+            }
+            catch {
+                spdlog::err("Ошибка при считывании параметров запуска. Для параметра {} принято значение {}", name, default_value);
+                return default_value;
+            }
+        }
+    }
+}   
