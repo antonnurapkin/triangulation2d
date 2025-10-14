@@ -126,17 +126,32 @@ std::array<double, 2> utils::get_point(std::string& s, const std::string& delimi
     return coords;
 }
 
-template<class T>
-T utils::check_launch_flag(int args, char** argv, const std::string& name, T& default_value) {
+int utils::check_launch_flag(int args, char** argv, const std::string& name, int default_value) {
     for (int i = 1; i < args; i++) {
-        if (argv[i] == name.c_str()) {
-            try {
-                T value = static_cast<T>(argv[i + 1])
+        if (std::string(argv[i]) == "--" + name) {
+            if (i + 1 < args) {
+                try {
+                    int value = std::stoi(std::string(argv[i + 1]));
+                    return value;
+                } catch (const std::exception& e) {
+                    std::cerr << "Error converting '" << argv[i + 1] << "' to int for flag -" << name << std::endl;
+                    return default_value;
+                }
             }
-            catch {
-                spdlog::err("Ошибка при считывании параметров запуска. Для параметра {} принято значение {}", name, default_value);
-                return default_value;
-            }
+            break;
         }
     }
+    return default_value;
+}   
+
+std::string utils::check_launch_flag(int args, char** argv, const std::string& name, std::string default_value) {
+    for (int i = 1; i < args; i++) {
+        if (std::string(argv[i]) == "--" + name) {
+            if (i + 1 < args) {
+                return std::string(argv[i + 1]);
+            }
+            break;
+        }
+    }
+    return default_value;
 }   

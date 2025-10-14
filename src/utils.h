@@ -21,8 +21,9 @@ namespace utils {
 
     void run_vizualization();
 
-    std::array<double, 2> get_point(const std::string& s, const std::string& delimiter);
+    std::array<double, 2> get_point(std::string& s, const std::string& delimiter);
 
-    template<class T>
-    T check_launch_flag(int args, char** argv, const std::string& name, T& default_value);
+    std::string check_launch_flag(int args, char** argv, const std::string& name, std::string default_value);
+
+    int check_launch_flag(int args, char** argv, const std::string& name, int default_value);
 } // namespace utils
