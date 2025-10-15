@@ -26,4 +26,6 @@ namespace utils {
     std::string check_launch_flag(int args, char** argv, const std::string& name, std::string default_value);
 
     int check_launch_flag(int args, char** argv, const std::string& name, int default_value);
+
+    std::filesystem::path get_executable_path();
 } // namespace utils

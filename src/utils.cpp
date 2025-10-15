@@ -7,6 +7,13 @@
 #include "utils.h"
 #include "structures.h"
 
+#ifdef _WIN32
+    #include <windows.h>
+#else
+    #include <unistd.h>
+    #include <limits.h>
+#endif
+
 double utils::dot_product(const std::vector<double>& vec1, const std::vector<double>& vec2) {
     if (vec1.size() == 2 && vec2.size() == 2) {
         return vec1[0] * vec2[0] + vec1[1] * vec2[1];
@@ -105,7 +112,7 @@ std::vector<std::array<double, 2>> utils::read_from_file(const std::string& file
 }
 
 void utils::run_vizualization() {
-    std::filesystem::path path_to_script = std::filesystem::current_path() / "scripts" / "vizualization.py";
+    std::filesystem::path path_to_script = get_executable_path().parent_path() / "vizualization.py";
 
     std::system((std::string("python3 ") + path_to_script.string()).c_str());
 }
@@ -155,3 +162,18 @@ std::string utils::check_launch_flag(int args, char** argv, const std::string& n
     }
     return default_value;
 }   
+
+std::filesystem::path utils::get_executable_path() {
+    #ifdef _WIN32
+        char path[PATH_MAX];
+        GetModuleFileName(NULL, path, MAX_PATH);
+        return std::filesystem::path(path).parent_path();
+    #else
+        char path[PATH_MAX];
+        ssize_t count = readlink("/proc/self/exe", path, PATH_MAX);
+        if (count == -1) {
+            return std::filesystem::path(path).parent_path();
+        }
+    #endif
+
+}
