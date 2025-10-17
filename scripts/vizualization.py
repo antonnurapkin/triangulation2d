@@ -6,8 +6,10 @@ from pathlib import Path
 import numpy as np
 import math
 
+
 triangles = []
 
+#TODO: Вписать прочитывание аргументов
 with open(Path(__file__).parent / "triangles.csv", mode='r', encoding='utf-8') as file:
     reader = csv.DictReader(file)
 
@@ -18,8 +20,8 @@ with open(Path(__file__).parent / "triangles.csv", mode='r', encoding='utf-8') a
 
         triangles.append([point1, point2, point3, point1])  # point1 для замыкания треугольника
 
-fig = go.Figure()
 
+fig = go.Figure()
 
 triangles = np.array(triangles)
 for tri_points in triangles:

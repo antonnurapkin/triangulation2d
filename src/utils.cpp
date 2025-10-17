@@ -111,10 +111,10 @@ std::vector<std::array<double, 2>> utils::read_from_file(const std::string& file
     return points;
 }
 
-void utils::run_vizualization() {
-    std::filesystem::path path_to_script = get_executable_path().parent_path() / "vizualization.py";
+void utils::run_vizualization(std::filesystem::path path_to_traingles) {
+    std::filesystem::path path_to_script = std::filesystem::absolute(get_executable_path().parent_path()) / "vizualization.py";
 
-    std::system((std::string("python3 ") + path_to_script.string()).c_str());
+    std::system((std::string("python3 ") + path_to_script.string()).c_str() + std::string("--file") + path_to_traingles.string().c_str());
 }
 
 std::array<double, 2> utils::get_point(std::string& s, const std::string& delimiter) {
@@ -164,16 +164,5 @@ std::string utils::check_launch_flag(int args, char** argv, const std::string& n
 }   
 
 std::filesystem::path utils::get_executable_path() {
-    #ifdef _WIN32
-        char path[PATH_MAX];
-        GetModuleFileName(NULL, path, MAX_PATH);
-        return std::filesystem::path(path).parent_path();
-    #else
-        char path[PATH_MAX];
-        ssize_t count = readlink("/proc/self/exe", path, PATH_MAX);
-        if (count == -1) {
-            return std::filesystem::path(path).parent_path();
-        }
-    #endif
-
+    return std::filesystem::canonical("/proc/self/exe");
 }

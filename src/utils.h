@@ -1,4 +1,5 @@
 #pragma once
+#include <filesystem>
 #include <vector>
 #include "structures.h"
 
@@ -19,7 +20,7 @@ namespace utils {
 
     std::vector<std::array<double, 2>> read_from_file(const std::string& filename);
 
-    void run_vizualization();
+    void run_vizualization(std::filesystem::path path_to_traingles);
 
     std::array<double, 2> get_point(std::string& s, const std::string& delimiter);
 
