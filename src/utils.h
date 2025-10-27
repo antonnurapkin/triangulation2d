@@ -1,4 +1,5 @@
 #pragma once
+#include <filesystem>
 #include <vector>
 #include "structures.h"
 
@@ -17,5 +18,15 @@ namespace utils {
 
     void save_to_file(const std::vector<std::array<std::array<double, 2>, 3>>& triangles, const std::string& filename = "triangles.csv");
 
-    void run_vizualization();
+    std::vector<std::array<double, 2>> read_from_file(const std::string& filename);
+
+    void run_vizualization(std::filesystem::path path_to_traingles);
+
+    std::array<double, 2> get_point(std::string& s, const std::string& delimiter);
+
+    std::string check_launch_flag(int args, char** argv, const std::string& name, std::string default_value);
+
+    int check_launch_flag(int args, char** argv, const std::string& name, int default_value);
+
+    std::filesystem::path get_executable_path();
 } // namespace utils
