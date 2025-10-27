@@ -38,4 +38,4 @@ x1,y1,x2,y2,x3,y3
 ```
 
 Пример команды запуска:
-./build/src/triangulation2d --input ./data/points.csv --output ./results/triangles.csv
+```./build/src/triangulation2d --input ./data/points.csv --output ./results/triangles.csv```
