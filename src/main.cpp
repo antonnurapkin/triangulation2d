@@ -9,31 +9,21 @@
 
 
 int main(int args, char** argv) {
+    int vizualization = utils::check_launch_flag(args, argv, "vizualization", 1);
+    std::string path_to_points = utils::check_launch_flag(args, argv, "input", "points.csv");
+    std::string path_to_triangles = utils::check_launch_flag(args, argv, "output", "triangles.csv");
 
-    spdlog::set_level(spdlog::level::err);
-    
-    // // Настройка генератора случайных чисел
-    double lower_bound = -10;
-    double upper_bound = 10;
-    // std::random_device rd;
-    std::mt19937 gen(1);
-    std::uniform_real_distribution<double> dis(lower_bound, upper_bound); // Диапазон значений
-
-    std::vector<std::array<double, 2>> points;
-    points.reserve(60); // Резервируем место для эффективности
-
-    // Заполнение вектора 60 случайными точками
-    for (int i = 0; i < 50; ++i) {
-        points.push_back({dis(gen), dis(gen)});
-    }
+    std::vector<std::array<double, 2>> points = utils::read_from_file(path_to_points);
 
     std::vector<std::array<std::array<double, 2>, 3>> result = triangulation::get_triangulation(points);
 
-    std::filesystem::path filename = std::filesystem::current_path() / "scripts" / "triangles.csv";
+    std::filesystem::path absolute_path_to_triangles = std::filesystem::absolute(path_to_triangles);
 
-    utils::save_to_file(result, filename.string());
+    utils::save_to_file(result, absolute_path_to_triangles.string());
 
-    utils::run_vizualization();
+    if (vizualization) {
+        utils::run_vizualization(absolute_path_to_triangles);
+    }
 
     return 0;
 }

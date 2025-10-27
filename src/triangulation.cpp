@@ -10,7 +10,6 @@
 #include "structures.h"
 #include "utils.h"
 
-using vectorTriangles = std::vector<std::array<double, 3>>;
 
 triangulation::trianglesArrayLikeDataType triangulation::get_triangulation(std::vector<std::array<double, 2>>& points) {
 

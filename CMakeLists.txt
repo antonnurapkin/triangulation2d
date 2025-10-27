@@ -9,12 +9,22 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 # Добавляем папку src как подпроект
 add_subdirectory(src)
 
-# По умолчанию визуализация выключена
-option(VIZUALIZATION "Enable Python visualization support" OFF)
+file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/scripts/vizualization.py DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/src)
 
-if (VIZUALIZATION)
-    configure_file(scripts/vizualization.py "${CMAKE_CURRENT_BINARY_DIR}/src/vizualization.py" COPYONLY)
+find_package(Python REQUIRED COMPONENTS Interpreter)
 
-    execute_process(pip3 install uv)
-    execute_process(uv add plotly)
-endif()
+function(install_python_package package_name)
+    execute_process(
+        COMMAND ${Python_EXECUTABLE} -m pip install --user ${package_name}
+        RESULT_VARIABLE result
+        OUTPUT_VARIABLE output
+        ERROR_VARIABLE error
+    )
+    if(NOT result EQUAL 0)
+        message(WARNING "Failed to install ${package_name}: ${error}")
+    else()
+        message(STATUS "Successfully installed ${package_name}")
+    endif()
+endfunction()
+
+install_python_package(plotly)
