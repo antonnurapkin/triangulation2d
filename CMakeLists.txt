@@ -28,4 +28,3 @@ function(install_python_package package_name)
 endfunction()
 
 install_python_package(plotly)
-
