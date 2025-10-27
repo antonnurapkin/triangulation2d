@@ -114,7 +114,7 @@ std::vector<std::array<double, 2>> utils::read_from_file(const std::string& file
 void utils::run_vizualization(std::filesystem::path path_to_traingles) {
     std::filesystem::path path_to_script = std::filesystem::absolute(get_executable_path().parent_path()) / "vizualization.py";
 
-    std::system((std::string("python3 ") + path_to_script.string()).c_str() + std::string("--file") + path_to_traingles.string().c_str());
+    std::system((std::string("python3 ") + path_to_script.string() + std::string(" --file ") + path_to_traingles.string()).c_str());
 }
 
 std::array<double, 2> utils::get_point(std::string& s, const std::string& delimiter) {

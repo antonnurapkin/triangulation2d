@@ -1,16 +1,22 @@
-import re
+import sys
 import csv
 import plotly.graph_objects as go
 import plotly.express as px
 from pathlib import Path
 import numpy as np
-import math
 
 
 triangles = []
 
-#TODO: Вписать прочитывание аргументов
-with open(Path(__file__).parent / "triangles.csv", mode='r', encoding='utf-8') as file:
+
+if sys.argv[1] != "--file":
+    raise AttributeError(f"Такого аргумента не существует: {sys.argv[1]}")
+
+
+path_to_triangles = Path(sys.argv[2])
+
+
+with open(path_to_triangles, mode='r', encoding='utf-8') as file:
     reader = csv.DictReader(file)
 
     for row in reader:
