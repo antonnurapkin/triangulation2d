@@ -1,19 +1,17 @@
-#include <algorithm>
-#include <stdexcept>
 #include "structures.h"
 
+#include <algorithm>
+#include <stdexcept>
 
-Point::Point(double x, double y) : x_(x), y_(y) {};
+Point::Point(double x, double y) : x_(x), y_(y){};
 
+Triangle::Triangle(std::array<int, 3> indexes, std::vector<std::shared_ptr<Triangle>> adjacentTriangles)
+    : indexes_(indexes), adjacentTriangles_(adjacentTriangles){};
 
-Triangle::Triangle(std::array<int, 3> indexes, std::vector<std::shared_ptr<Triangle>> adjacentTriangles) :
-	indexes_(indexes), adjacentTriangles_(adjacentTriangles) {};
-
-Triangle::Triangle(std::array<int, 3> indexes) : indexes_(indexes) {};
-
+Triangle::Triangle(std::array<int, 3> indexes) : indexes_(indexes){};
 
 Triangle::Triangle(int index1, int index2, int index3) {
-    indexes_ = std::array<int, 3> {{index1, index2, index3}};
+    indexes_ = std::array<int, 3>{{index1, index2, index3}};
 }
 
 Triangle::Triangle(const Triangle& other) {
