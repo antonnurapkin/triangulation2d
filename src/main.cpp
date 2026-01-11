@@ -1,12 +1,13 @@
-#include <vector>
-#include <iostream>
-#include <random>
+#include <spdlog/spdlog.h>
+
 #include <cstdlib>
 #include <filesystem>
-#include <spdlog/spdlog.h>
+#include <iostream>
+#include <random>
+#include <vector>
+
 #include "triangulation.h"
 #include "utils.h"
-
 
 int main(int args, char** argv) {
     int vizualization = utils::check_launch_flag(args, argv, "vizualization", 1);
