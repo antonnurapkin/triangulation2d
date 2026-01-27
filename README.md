@@ -1,3 +1,5 @@
+<img width="1280" height="798" alt="image" src="https://github.com/user-attachments/assets/c3416cc7-eb83-4bde-853a-5563c2f6db25" />
+
 ### Библиотека для расчёта триангуляции Делоне
 
 Перед сборкой необходимо устновить библиотеку для логирования:
